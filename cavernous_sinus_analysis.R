@@ -59,7 +59,11 @@ data_file <- data_file %>% mutate(`Age at the time of surgery`=as.numeric(`Age a
                                   `Tumor size (T, cm)` =as.numeric(as.character(`Tumor size (T, cm)`)),
                                   `Tumor size (AP, cm)` =as.numeric(as.character(`Tumor size (AP, cm)`)),
                                   `Tumor size (RC, cm)` =as.numeric(as.character(`Tumor size (RC, cm)`)),
-                                  `Tumor volume (ABC/2, cm3)` = as.numeric(as.character(`Tumor volume (ABC/2, cm3)`))
+                                  `Tumor volume (ABC/2, cm3)` = as.numeric(as.character(`Tumor volume (ABC/2, cm3)`)),
+                                  `EBL (mL)` = as.numeric(as.character(`EBL (mL)`)),
+                                  `Length of Surgery (Anesthesia time in Min)` = as.numeric(as.character(`Length of Surgery (Anesthesia time in Min)`)),
+                                  `Length of follow-up (months)` = as.numeric(as.character(`Length of follow-up (months)`)),
+                                  `Length of ICU Stay (Days)` = as.numeric(as.character(`Length of ICU Stay (Days)`))
 #                                  `Surgery_DateTime`=as.Date(`Surgery_DateTime`,origin = "1899-12-30")
                                   )
 
