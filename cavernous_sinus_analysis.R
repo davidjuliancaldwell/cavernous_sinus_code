@@ -112,19 +112,32 @@ if (saveFig){
 
 data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "Missing")))
 
-data_file_stats <- data_file_stats %>% rename(t_size=`Tumor size (T, cm)`,
+data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`,
+                                              path = `Pathology (Meningioma = 1, Chordoma = 2, Chondrosarcoma = 3, Schwannoma = 4, Adenoma = 5 hemangioma = 6 Metastasis/cancer = 7  Other = 8)`,
+                                              t_size=`Tumor size (T, cm)`,
                                               ap_size =`Tumor size (AP, cm)`,
                                               rc_size = `Tumor size (RC, cm)`,
                                               volume = `Tumor volume (ABC/2, cm3)`,
-                                              id = `Case Number`,
                                               cav_only = `Tumor only in cavernous sinus (Y=1, 2 = N, NA = NA)`,
                                               epi = `Tumor epicenter (1 = cavernous sinus, 2 = MF 3 = PF 4 = ITF 5 = sella 6 = sphenoid sinus 7 = orbital apex`,
-                                              surg_approach = `Surgical approach (Fronto-temporal approach =1, Subtemporal approach = 2 Posterior petrosal = 3  transnasal/transmaxillary = 4 Other = 5`,
+                                              surg_approach = `Surgical approach (Fronto-temporal approach =1, Subtemporal approach = 2 Posterior petrosal = 3  transnasal/transmaxillary = 4 Other = 5  , 1+2 = 6)`,
                                               resect = `Tumor resection based on PO MRI (1 = GTR, 2 NTR = No residual on MRI, but tumor known to be left, 3 = Subtotal resection (residual < 10 %) 4 = Partial resection (Residual  > 10 %) 5 = Biopsy`,
-                                              skull_osteo = `Skull base osteotomy (1 = None 2 = Posterolateral orbitotomy 3 = Full orbitotomy 4 = Zygomatic osteotomy 5 = Orbito-zygomatic osteotomy 6 = retrolabyrinthine 7 = tranlabyrinthine 8: petrous apex`,
+                                              skull_osteo = `Skull base osteotomy (1 = None 2 = Posterolateral orbitotomy 3 = Full orbitotomy 4 = Zygomatic osteotomy 5 = Orbito-zygomatic osteotomy 6 = retrolabyrinthine 7 = tranlabyrinthine 8= petrous apex 9= 2,4 10 = 2,4,8 11 = 4,8 12 = 4,6,8 13 = 6,8`,
                                               optic = `Optic canal decompression and anterior clinoidectomy Y =1, 2=N)`,
-                                              wall_cav = `Wall of the cavernous sinus approached ( 1= Lateral wall, 2 = Superior wall 3 = Posterior wall 4 = Anterior wall 5 = Medial wall`
+                                              wall_cav = `Wall of the cavernous sinus approached ( 1= Lateral wall, 2 = Superior wall 3 = Posterior wall 4 = Anterior wall 5 = Medial wall 6 =1,2 7 =2,4, 8 =4,5 9 =1,3 10 = 2,3`,
+                                              lat = `Lateral wall (Y=1, N=2)`,
+                                              med = `Medial wall (Y=1, N=2)`,
+                                              sup = `Superior wall (Y=1, N=2)`,
+                                              post = `Posterior wall (Y=1, N=2)`,
+                                              ant = `Anterior wall (Y=1, N=2)`,
+                                              grade = `Tumor grade (WHO) (NA = NA,`,
+                                              post_treat = `Post-operative aditionnal treatment (None=1, Repeat surgery = 2, SRS =3 FSRT = 4 Proton therapy =5 Chemo/immunotherapy = 6 Other = 7, 3,4 = 8,  5,6 = 9 4, 6 = 10`
                                               )
+
+data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = "1","2" = "2","3"="2","4"="2"))
+data_file_stats <- data_file_stats %>% mutate(post_treat_condense = recode(resect,"1" = "1","2" = "2","3"="2","4"="2"))
+
+
 
 fit.logit = multinom(resect ~ surg_approach + skull_osteo + optic + wall_cav,data=data_file_stats)
 
