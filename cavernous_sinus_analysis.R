@@ -142,13 +142,21 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
 data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1))
 data_file_stats <- data_file_stats %>% mutate(post_treat_condense = recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1))
 
-fit.logit = glm(cbind(resect_condense,post_treat_condense) ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
+fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 
+
+fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 
 #fit.logit = glm(resect_condense ~ surg_approach ,data=data_file_stats,family="binomial")
-confint(fit.logit)
-wald.test(b = coef(fit.logit), Sigma = vcov(fit.logit), Terms = 2:6)
-exp(coef(fit.logit))
+confint(fit.logit1)
+wald.test(b = coef(fit.logit1), Sigma = vcov(fit.logit1), Terms = 2:6)
+exp(coef(fit.logit1))
+
+confint(fit.logit2)
+wald.test(b = coef(fit.logit2), Sigma = vcov(fit.logit2), Terms = 2:6)
+exp(coef(fit.logit2))
+
+
 
 
 glm(admit ~ gre + gpa + rank, data = mydata, family = "binomial")
