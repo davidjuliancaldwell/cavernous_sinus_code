@@ -23,11 +23,12 @@ library(officer)
 library(lmerTest)
 library(emmeans)
 library(janitor)
+library(aod)
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
-saveFig = TRUE
+saveFig = FALSE
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -111,6 +112,8 @@ if (saveFig){
 
 
 data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "Missing")))
+data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "na")))
+
 
 data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`,
                                               path = `Pathology (Meningioma = 1, Chordoma = 2, Chondrosarcoma = 3, Schwannoma = 4, Adenoma = 5 hemangioma = 6 Metastasis/cancer = 7  Other = 8)`,
@@ -131,12 +134,24 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               post = `Posterior wall (Y=1, N=2)`,
                                               ant = `Anterior wall (Y=1, N=2)`,
                                               grade = `Tumor grade (WHO) (NA = NA,`,
-                                              post_treat = `Post-operative aditionnal treatment (None=1, Repeat surgery = 2, SRS =3 FSRT = 4 Proton therapy =5 Chemo/immunotherapy = 6 Other = 7, 3,4 = 8,  5,6 = 9 4, 6 = 10`
+                                              post_treat = `Post-operative aditionnal treatment (None=1, Repeat surgery = 2, SRS =3 FSRT = 4 Proton therapy =5 Chemo/immunotherapy = 6 Other = 7, 3,4 = 8,  5,6 = 9 4, 6 = 10`,
+                                              prev_rad = `Previous radiation therapy ((Y=1, 2 = N)`,
+                                              prev_surg = `Previous surgery (Y=1, 2 = N)`
                                               )
 
-data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = "1","2" = "2","3"="2","4"="2"))
-data_file_stats <- data_file_stats %>% mutate(post_treat_condense = recode(resect,"1" = "1","2" = "2","3"="2","4"="2"))
+data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1))
+data_file_stats <- data_file_stats %>% mutate(post_treat_condense = recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1))
 
+fit.logit = glm(cbind(resect_condense,post_treat_condense) ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
+
+
+#fit.logit = glm(resect_condense ~ surg_approach ,data=data_file_stats,family="binomial")
+confint(fit.logit)
+wald.test(b = coef(fit.logit), Sigma = vcov(fit.logit), Terms = 2:6)
+exp(coef(fit.logit))
+
+
+glm(admit ~ gre + gpa + rank, data = mydata, family = "binomial")
 
 
 fit.logit = multinom(resect ~ surg_approach + skull_osteo + optic + wall_cav,data=data_file_stats)
