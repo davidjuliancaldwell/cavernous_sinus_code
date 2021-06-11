@@ -28,7 +28,7 @@ library(aod)
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
-saveFig = FALSE
+saveFig = TRUE
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -74,6 +74,12 @@ data_file <- data_file %>% mutate(across(c(`Tumor only in cavernous sinus (Y=1, 
                                   factor))
 
 
+
+data_file <- data_file %>% mutate(minor_comp = case_when(((`UTI (Y=1, N=2)`=="1")|(`Pneumonia (y=1 N=2)`=="1")|(`DVT (Y=1 N=2)`=="1")|(`PE (Y=1, N=2)`=="1")|(`MI (Y=1 N=2)`=="1")|(`Sinus thrombosis (Y=1, N=2)`=="1")|(`CSF Leak (Y=1 N=2)`=="1")|(`Need for OR for wound revision (y=1, N=2)`=="1")|(`Need for permanent CSF diversion (Y=1, N=2)`=="1")|(`Immediate PO Frontalis Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`=="3")|(`PO 6 weeks-3 months Frontalis Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`=="3"))~1,
+                                                         TRUE~0),
+                                  major_comp = case_when(((`Symptomatic PO hematoma (Y=1 N=2)`=="1")|(`Need for OR for hematoma evacuation (Y=1 N=2)`=="1")| (`Stroke (y=1, N=2)`=="1"))~1,
+                                                         TRUE~0))
+
 ### do everything
 data_summary_total <- data_file %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
                                                                                                        all_categorical() ~ "{n} / {N} ({p}%)"),
@@ -99,9 +105,6 @@ if (saveFig){
   
   save_as_docx(data_summary_total_flex,path="total_summary.docx",pr_section = sect_properties)
 }
-
-
-
 
 
 
@@ -136,11 +139,32 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               grade = `Tumor grade (WHO) (NA = NA,`,
                                               post_treat = `Post-operative aditionnal treatment (None=1, Repeat surgery = 2, SRS =3 FSRT = 4 Proton therapy =5 Chemo/immunotherapy = 6 Other = 7, 3,4 = 8,  5,6 = 9 4, 6 = 10`,
                                               prev_rad = `Previous radiation therapy ((Y=1, 2 = N)`,
-                                              prev_surg = `Previous surgery (Y=1, 2 = N)`
+                                              prev_surg = `Previous surgery (Y=1, 2 = N)`,
+                                              po_1_cn_3 = `PO 1 year (or last follow up) CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              imm_cn_3 = `Immediate PO CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_1_cn_4 = `PO 1 year (or last follow up) CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              imm_cn_4 = `Immediate PO CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_1_cn_5 = `PO 1 year (or last follow up) CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              imm_cn_5 = `Immediate PO CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_1_cn_6 = `PO 1 year (or last follow up) CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              imm_cn_6 = `Immediate PO CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`
                                               )
 
-data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1))
-data_file_stats <- data_file_stats %>% mutate(post_treat_condense = recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1))
+data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1),
+                                              post_treat_condense = recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1),
+                                              po_1_cn_3 = recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1),
+                                              imm_cn_3 = recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1),
+                                              po_1_cn_4 = recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1),
+                                              imm_cn_4 = recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1),
+                                              po_1_cn_5 = recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1),
+                                              imm_cn_5 = recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1),
+                                              po_1_cn_6 = recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1),
+                                              imm_cn_6 = recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1)
+                                              )
+
+
+
+
 
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 
