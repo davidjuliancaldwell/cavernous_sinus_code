@@ -24,6 +24,9 @@ library(lmerTest)
 library(emmeans)
 library(janitor)
 library(aod)
+library(MASS)
+library(brant)
+library(nnet)
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
@@ -152,14 +155,17 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
 
 data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1),
                                               post_treat_condense = recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1),
-                                              po_1_cn_3 = recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1),
-                                              imm_cn_3 = recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1),
-                                              po_1_cn_4 = recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1),
-                                              imm_cn_4 = recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1),
-                                              po_1_cn_5 = recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1),
-                                              imm_cn_5 = recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1),
-                                              po_1_cn_6 = recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1),
-                                              imm_cn_6 = recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1)
+                                              surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
+                                              epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
+                                              path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
+                                              po_1_cn_3 = as.factor(recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                              imm_cn_3 = as.factor(recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                              po_1_cn_4 = as.factor(recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1)),
+                                              imm_cn_4 = as.factor(recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1)),
+                                              po_1_cn_5 = as.factor(recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1)),
+                                              imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1)),
+                                              po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1)),
+                                              imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1))
                                               )
 
 
@@ -167,9 +173,19 @@ data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1
 
 
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
+fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
+
+fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + age + path,data=data_file_stats,family="binomial")
+
+fit.logit1 = glm(resect_condense ~ surg_approach_condense + prev_rad + prev_surg + age + path_condense + epi_condense+lat+post+sup,data=data_file_stats,family="binomial")
 
 
 fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
+fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
+fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg  + age + path,data=data_file_stats,family="binomial")
+
+fit.logit2 = glm(post_treat_condense ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+
 
 #fit.logit = glm(resect_condense ~ surg_approach ,data=data_file_stats,family="binomial")
 confint(fit.logit1)
@@ -179,6 +195,39 @@ exp(coef(fit.logit1))
 confint(fit.logit2)
 wald.test(b = coef(fit.logit2), Sigma = vcov(fit.logit2), Terms = 2:6)
 exp(coef(fit.logit2))
+
+fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
+
+fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
+fit.multinom_cn_3 = multinom(imm_cn_3~surg_approach,data=data_file_stats)
+brant(fit.ordinal_cn_3)
+
+M1 <- logLik(fit.ordinal_cn_3)
+M2 <- logLik(fit.multinom_cn_3)
+(G <- -2*(M1[1] - M2[1]))
+# degree of freedoM
+pchisq(G,3,lower.tail = FALSE)
+
+# using epi in additional to surg_approach says rank deficient
+
+#fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg,data=data_file_stats)
+
+#fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+
+fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg,data=data_file_stats)
+
+
+fit.ordinal_cn_4_imm = polr(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_4 = polr(po_1_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+
+fit.ordinal_cn_5_imm = polr(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+
+fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+
+#fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach+age+prev_rad+prev_surg,data=data_file_stats)
 
 
 
