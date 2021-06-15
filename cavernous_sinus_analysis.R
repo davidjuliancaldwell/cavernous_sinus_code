@@ -27,6 +27,7 @@ library(aod)
 library(MASS)
 library(brant)
 library(nnet)
+library(purrr)
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
@@ -169,6 +170,35 @@ data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1
                                               )
 
 
+dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","imm_cn_4","po_1_cn_4","imm_cn_5","po_1_cn_5","imm_cn_6","po_1_cn_6")
+independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","lat","sup","post")
+
+dependent_vars = set_names(dependent_vars)
+independent_vars = set_names(independent_vars)
+
+
+#https://aosmith.rbind.io/2018/08/20/automating-exploratory-plots/
+
+jitter_fun = function(x,y){
+  ggplot(data_file_stats,aes(x=.data[[y]],y=.data[[x]]) ) + 
+    geom_jitter(height=0.2,width=0.2)
+}
+
+all_plots2 = map(dependent_vars,function(dependent_vars){
+  map(independent_vars,function(independent_vars){
+    jitter_fun(x=dependent_vars,y=independent_vars)
+  })
+})
+
+plotnames = imap(all_plots2,~paste0("cav_sinus_",.y,"_",names(.x),".png")) %>% flatten()
+
+walk2(plotnames, flatten(all_plots2), ~ggsave(filename = .x, plot = .y, 
+                                             height = 7, width = 7))
+
+plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
+plot3
+
+
 
 
 
@@ -178,6 +208,8 @@ fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + 
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + age + path,data=data_file_stats,family="binomial")
 
 fit.logit1 = glm(resect_condense ~ surg_approach_condense + prev_rad + prev_surg + age + path_condense + epi_condense+lat+post+sup,data=data_file_stats,family="binomial")
+
+fit.logit1 = glm(resect_condense ~ prev_rad + prev_surg + age + path_condense + epi_condense,data=data_file_stats,family="binomial")
 
 
 fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
@@ -211,21 +243,21 @@ pchisq(G,3,lower.tail = FALSE)
 # using epi in additional to surg_approach says rank deficient
 
 #fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg,data=data_file_stats)
+fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
 
 #fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
 
-fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg,data=data_file_stats)
+fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
 
 
-fit.ordinal_cn_4_imm = polr(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-fit.ordinal_cn_4 = polr(po_1_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_4_imm = polr(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+fit.ordinal_cn_4 = polr(po_1_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 
-fit.ordinal_cn_5_imm = polr(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_5_imm = polr(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 
-fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 
 #fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach+age+prev_rad+prev_surg,data=data_file_stats)
 
