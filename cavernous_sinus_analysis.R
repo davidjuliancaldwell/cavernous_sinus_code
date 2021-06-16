@@ -28,11 +28,14 @@ library(MASS)
 library(brant)
 library(nnet)
 library(purrr)
+library(broom)
+
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
 saveFig = TRUE
+include_na_table = FALSE
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -55,7 +58,11 @@ cat(column_names,sep="', '")
 ### clean up data
 data_file <- mutate_all(data_file,.funs=str_to_lower)
 
+if (include_na_table){
 data_file<-data_file %>% mutate(  across(everything(), ~replace_na(.x, "Missing")))
+} else {
+  data_file<-data_file %>% mutate(  across(everything(), ~na_if(., "na")))
+}
 
 #data_file$Surgery_DateTime <- excel_numeric_to_date(as.numeric(as.character(data_file$Surgery_DateTime)), date_system = "modern")    
 
@@ -84,14 +91,17 @@ data_file <- data_file %>% mutate(minor_comp = case_when(((`UTI (Y=1, N=2)`=="1"
                                   major_comp = case_when(((`Symptomatic PO hematoma (Y=1 N=2)`=="1")|(`Need for OR for hematoma evacuation (Y=1 N=2)`=="1")| (`Stroke (y=1, N=2)`=="1"))~1,
                                                          TRUE~0))
 
-### do everything
-data_summary_total <- data_file %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
-                                                                                                       all_categorical() ~ "{n} / {N} ({p}%)"),
-                                                                                      digits = all_continuous() ~ 1,
-                                                                                      missing = "no") 
-#missing_text = "(Missing)")  
 
 if (saveFig){
+  
+  if(include_na_table){
+    ### do everything
+    data_summary_total <- data_file %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                                                     all_categorical() ~ "{n} / {N} ({p}%)"),
+                                                    digits = all_continuous() ~ 1,
+                                                    missing = "no") 
+    #missing_text = "(Missing)")  
+    
   data_summary_total %>%
     as_gt() %>%             # convert to gt table
     gt::gtsave(             # save table as image
@@ -108,7 +118,34 @@ if (saveFig){
   data_summary_total_flex <- fontsize(data_summary_total_flex,size=fontSize)
   
   save_as_docx(data_summary_total_flex,path="total_summary.docx",pr_section = sect_properties)
-}
+  }
+  else{
+    ### do everything
+    data_summary_total <- data_file %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                                                     all_categorical() ~ "{n} / {N} ({p}%)"),
+                                                    digits = all_continuous() ~ 1,
+                                                    missing = "no") 
+    #missing_text = "(Missing)")  
+    
+    data_summary_total %>%
+      as_gt() %>%             # convert to gt table
+      gt::gtsave(             # save table as image
+        filename = "total_summary_no_na.png"
+      )
+    
+    data_summary_total %>%
+      as_gt() %>%             # convert to gt table
+      gt::gtsave(             # save table as Html
+        filename = "total_summary_no_na.html"
+      )
+    
+    data_summary_total_flex <- data_summary_total %>% as_flex_table() 
+    data_summary_total_flex <- fontsize(data_summary_total_flex,size=fontSize)
+    
+    save_as_docx(data_summary_total_flex,path="total_summary_no_na.docx",pr_section = sect_properties)
+    
+  }
+  }
 
 
 
@@ -192,15 +229,13 @@ all_plots2 = map(dependent_vars,function(dependent_vars){
 
 plotnames = imap(all_plots2,~paste0("cav_sinus_",.y,"_",names(.x),".png")) %>% flatten()
 
+if (saveFig){
 walk2(plotnames, flatten(all_plots2), ~ggsave(filename = .x, plot = .y, 
                                              height = 7, width = 7))
+}
 
 plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
 plot3
-
-
-
-
 
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
@@ -209,7 +244,21 @@ fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + age + 
 
 fit.logit1 = glm(resect_condense ~ surg_approach_condense + prev_rad + prev_surg + age + path_condense + epi_condense+lat+post+sup,data=data_file_stats,family="binomial")
 
-fit.logit1 = glm(resect_condense ~ prev_rad + prev_surg + age + path_condense + epi_condense,data=data_file_stats,family="binomial")
+fit.logit1 = glm(resect_condense ~ prev_rad + prev_surg + age + path_condense + epi_condense+lat+post+sup,data=data_file_stats,family="binomial")
+
+#http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
+# Extract model results
+fit.logit1.data <- augment(fit.logit1) %>% 
+  mutate(index = 1:n()) 
+
+ggplot(fit.logit1.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = resect_condense), alpha = .5) +
+  theme_bw()
+
+fit.logit1.data %>% 
+  filter(abs(.std.resid) > 3)
+
+car::vif(fit.logit1)
 
 
 fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
@@ -217,6 +266,20 @@ fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + ep
 fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg  + age + path,data=data_file_stats,family="binomial")
 
 fit.logit2 = glm(post_treat_condense ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+
+#http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
+# Extract model results
+fit.logit2.data <- augment(fit.logit2) %>% 
+  mutate(index = 1:n()) 
+
+ggplot(fit.logit2.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = post_treat_condense), alpha = .5) +
+  theme_bw()
+
+fit.logit2.data %>% 
+  filter(abs(.std.resid) > 3)
+
+car::vif(fit.logit2)
 
 
 #fit.logit = glm(resect_condense ~ surg_approach ,data=data_file_stats,family="binomial")
@@ -259,31 +322,3 @@ fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+
 fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 
-#fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach+age+prev_rad+prev_surg,data=data_file_stats)
-
-
-
-
-glm(admit ~ gre + gpa + rank, data = mydata, family = "binomial")
-
-
-fit.logit = multinom(resect ~ surg_approach + skull_osteo + optic + wall_cav,data=data_file_stats)
-
-fit.logit = mlogit(`Tumor resection based on PO MRI (1 = GTR, 2 NTR = No residual on MRI, but tumor known to be left, 3 = Subtotal resection (residual < 10 %) 4 = Partial resection (Residual  > 10 %) 5 = Biopsy` ~ `Surgical approach (Fronto-temporal approach =1, Subtemporal approach = 2 Posterior petrosal = 3  transnasal/transmaxillary = 4 Other = 5`+ `Skull base osteotomy (1 = None 2 = Posterolateral orbitotomy 3 = Full orbitotomy 4 = Zygomatic osteotomy 5 = Orbito-zygomatic osteotomy 6 = retrolabyrinthine 7 = tranlabyrinthine 8: petrous apex` + `Optic canal decompression and anterior clinoidectomy Y =1, 2=N)` + `Wall of the cavernous sinus approached ( 1= Lateral wall, 2 = Superior wall 3 = Posterior wall 4 = Anterior wall 5 = Medial wall` + (1|`Case Number`),data=data_file_stats)
-
-
-
-fit.logit = mclogit(`Tumor resection based on PO MRI (1 = GTR, 2 NTR = No residual on MRI, but tumor known to be left, 3 = Subtotal resection (residual < 10 %) 4 = Partial resection (Residual  > 10 %) 5 = Biopsy` ~ `Surgical approach (Fronto-temporal approach =1, Subtemporal approach = 2 Posterior petrosal = 3  transnasal/transmaxillary = 4 Other = 5`+ `Skull base osteotomy (1 = None 2 = Posterolateral orbitotomy 3 = Full orbitotomy 4 = Zygomatic osteotomy 5 = Orbito-zygomatic osteotomy 6 = retrolabyrinthine 7 = tranlabyrinthine 8: petrous apex` + `Optic canal decompression and anterior clinoidectomy Y =1, 2=N)` + `Wall of the cavernous sinus approached ( 1= Lateral wall, 2 = Superior wall 3 = Posterior wall 4 = Anterior wall 5 = Medial wall` + (1|`Case Number`),data=data_file_stats)
-emmeans(fit.logit, list(pairwise ~ overallBlockType), adjust = "tukey")
-
-emm_s.t <- emmeans(fit.logit, pairwise ~ overallBlockType| mapStimLevel)
-emm_s.t <- emmeans(fit.logit, pairwise ~ mapStimLevel | overallBlockType)
-summary(glht(fit.logit,linfct=mcp(overallBlockType="Tukey")))
-
-emm_pairwise <- emmeans(fit.logit,~overallBlockType*pre_post,adjust="Tukey")
-contrast(emm_pairwise,interaction="pairwise")
-eff_size(emm_pairwise,sigma=sigma(fit.logit),edf=df.residual(fit.logit))
-marginal_means_plot <- emmip(fit.logit,overallBlockType~pre_post)
-marginal_means_plot <- marginal_means_plot + aes(x = factor(pre_post, level=c('pre','post'))) + labs(x = expression(paste("Pre versus Post Conditioning")),y=expression(paste("Linear Prediction log(",mu,"V)")),color="Experimental Condition",title = paste0("Estimated Marginal Means by Conditioning and Status")) +
-  scale_color_brewer(palette="Dark2") +
-  scale_fill_brewer(palette="Dark2") 
