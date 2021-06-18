@@ -20,7 +20,6 @@ library(labelled)
 library(webshot)
 library(flextable)
 library(officer)
-library(lmerTest)
 library(emmeans)
 library(janitor)
 library(aod)
@@ -29,6 +28,8 @@ library(brant)
 library(nnet)
 library(purrr)
 library(broom)
+library(lmerTest)
+library(GGally)
 
 
 setwd("~/SharedCode/cavernous_sinus_code")
@@ -36,6 +37,7 @@ rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
 saveFig = TRUE
 include_na_table = FALSE
+doOrdinal = FALSE
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -182,36 +184,70 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               prev_rad = `Previous radiation therapy ((Y=1, 2 = N)`,
                                               prev_surg = `Previous surgery (Y=1, 2 = N)`,
                                               po_1_cn_3 = `PO 1 year (or last follow up) CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_6_3_months_cn_3 = `Post-op 6 weeks-3 months  CN 3 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
                                               imm_cn_3 = `Immediate PO CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_4 = `PO 1 year (or last follow up) CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_6_3_months_cn_4 = `Post-op 6 weeks-3 months  CN 4 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
                                               imm_cn_4 = `Immediate PO CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_5 = `PO 1 year (or last follow up) CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_6_3_months_cn_5 = `Post-op 6 weeks-3 months  CN 5 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
                                               imm_cn_5 = `Immediate PO CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_6 = `PO 1 year (or last follow up) CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              po_6_3_months_cn_6 = `Post-op 6 weeks-3 months  CN 6 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
                                               imm_cn_6 = `Immediate PO CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`
                                               )
 
-data_file_stats <- data_file_stats %>% mutate(resect_condense = recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1),
-                                              post_treat_condense = recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1),
+if (doOrdinal){
+data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1)),
+                                              post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
                                               surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
                                               epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
                                               path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
                                               po_1_cn_3 = as.factor(recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                              po_6_3_months_cn_3 = as.factor(recode(as.numeric(po_6_3_months_cn_3),"1" = 2, "2"=3,"3"=1)),
                                               imm_cn_3 = as.factor(recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                              po_6_3_months_cn_4 = as.factor(recode(as.numeric(po_6_3_months_cn_4),"1" = 2, "2"=3,"3"=1)),
                                               po_1_cn_4 = as.factor(recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1)),
                                               imm_cn_4 = as.factor(recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1)),
+                                              po_6_3_months_cn_5 = as.factor(recode(as.numeric(po_6_3_months_cn_5),"1" = 2, "2"=3,"3"=1)),
                                               po_1_cn_5 = as.factor(recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1)),
                                               imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1)),
+                                              po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=3,"3"=1)),
                                               po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1)),
                                               imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1))
                                               )
 
-
-dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","imm_cn_4","po_1_cn_4","imm_cn_5","po_1_cn_5","imm_cn_6","po_1_cn_6")
+} else{
+  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1)),
+                                                post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
+                                                surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
+                                                epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
+                                                path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
+                                                po_1_cn_3 = as.factor(recode(as.numeric(po_1_cn_3),"1" = 2, "2"=2,"3"=1)),
+                                                po_6_3_months_cn_3 = as.factor(recode(as.numeric(po_6_3_months_cn_3),"1" = 2, "2"=2,"3"=1)),
+                                                imm_cn_3 = as.factor(recode(as.numeric(imm_cn_3),"1" = 2, "2"=2,"3"=1)),
+                                                po_1_cn_4 = as.factor(recode(as.numeric(po_1_cn_4),"1" = 2, "2"=2,"3"=1)),
+                                                po_6_3_months_cn_4 = as.factor(recode(as.numeric(po_6_3_months_cn_4),"1" = 2, "2"=2,"3"=1)),
+                                                imm_cn_4 = as.factor(recode(as.numeric(imm_cn_4),"1" = 2, "2"=2,"3"=1)),
+                                                po_1_cn_5 = as.factor(recode(as.numeric(po_1_cn_5),"1" = 2, "2"=2,"3"=1)),
+                                                po_6_3_months_cn_5 = as.factor(recode(as.numeric(po_6_3_months_cn_5),"1" = 2, "2"=2,"3"=1)),
+                                                imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=2,"3"=1)),
+                                                po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=2,"3"=1)),
+                                                po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=2,"3"=1)),
+                                                imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=2,"3"=1))
+  )
+  
+}
+dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","po_6_3_months_cn_3","imm_cn_4","po_1_cn_4","po_6_3_months_cn_4","imm_cn_5","po_1_cn_5","po_6_3_months_cn_5","imm_cn_6","po_1_cn_6","po_6_3_months_cn_6")
 independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","lat","sup","post")
 
 dependent_vars = set_names(dependent_vars)
 independent_vars = set_names(independent_vars)
+
+ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","resect_condense","post_treat_condense")])
+
+
+ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","po_1_cn_3","po_1_cn_4","po_1_cn_5","po_1_cn_6")])
 
 
 #https://aosmith.rbind.io/2018/08/20/automating-exploratory-plots/
@@ -291,6 +327,11 @@ confint(fit.logit2)
 wald.test(b = coef(fit.logit2), Sigma = vcov(fit.logit2), Terms = 2:6)
 exp(coef(fit.logit2))
 
+fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+   
+  
+fit.logit4 = glm(minor_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+
 fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
 
 fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
@@ -305,6 +346,7 @@ pchisq(G,3,lower.tail = FALSE)
 
 # using epi in additional to surg_approach says rank deficient
 
+if (doOrdinal){
 #fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
 fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
 
@@ -321,4 +363,104 @@ fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+
 
 fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-
+} else{
+ # fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense+epi_condense+path_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  
+  #fit.ordinal_cn_3 = glm(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+  
+#  fit.log_cn_3 = glm(po_1_cn_3~surg_approach_condense+epi_condense+path_condense + +age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  
+  
+  fit.log_cn_4_imm = glm(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  fit.log_cn_4 = glm(po_1_cn_4~ age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  
+  fit.log_cn_5_imm = glm(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+  fit.log_cn_5 = glm(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+  
+  fit.log_cn_6_imm = glm(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
+  fit.log_cn_6 = glm(po_1_cn_6~age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  
+  
+}
+  if (doMixed){
+  data_file_stats_long3<-data_file_stats%>%pivot_longer(cols = c("imm_cn_3","po_6_3_months_cn_3","po_1_cn_3"),names_to="names_time_cn3",values_to="cn_3")
+  data_file_stats_long4<-data_file_stats%>%pivot_longer(cols = c("imm_cn_4","po_6_3_months_cn_4","po_1_cn_4"),names_to="names_time_cn4",values_to="cn_4")
+  data_file_stats_long5<-data_file_stats%>%pivot_longer(cols = c("imm_cn_5","po_6_3_months_cn_5","po_1_cn_5"),names_to="names_time_cn5",values_to="cn_5")
+  data_file_stats_long6<-data_file_stats%>%pivot_longer(cols = c("imm_cn_6","po_6_3_months_cn_6","po_1_cn_6"),names_to="names_time_cn6",values_to="cn_6")
+  
+  data_file_stats_long3 <- data_file_stats_long3 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn3, ignore.case = TRUE)~'time1',
+                                                                              grepl("po_6_3_months", names_time_cn3, ignore.case = TRUE)~'time2',
+                                                                              grepl("po_1", names_time_cn3, ignore.case = TRUE)~'time3'
+                                                                              )))
+  
+  data_file_stats_long4 <- data_file_stats_long4 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn4, ignore.case = TRUE)~'time1',
+                                                                                 grepl("po_6_3_months", names_time_cn4, ignore.case = TRUE)~'time2',
+                                                                                 grepl("po_1", names_time_cn4, ignore.case = TRUE)~'time3'
+  )))
+  
+  data_file_stats_long5 <- data_file_stats_long5 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn5, ignore.case = TRUE)~'time1',
+                                                                                 grepl("po_6_3_months", names_time_cn5, ignore.case = TRUE)~'time2',
+                                                                                 grepl("po_1", names_time_cn5, ignore.case = TRUE)~'time3'
+  )))
+  
+  data_file_stats_long6 <- data_file_stats_long6 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn6, ignore.case = TRUE)~'time1',
+                                                                                 grepl("po_6_3_months", names_time_cn6, ignore.case = TRUE)~'time2',
+                                                                                 grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
+  )))
+  
+  fit.cn_3_mixed = glmer(cn_3 ~ surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_mixed = glmer(cn_3 ~ time_point*lat + age+prev_rad+prev_surg+(1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  
+  fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_lat = glmer(cn_3 ~ time_point + lat +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  anova(fit.cn_3_lat,fit.cn_3_mixedlat)
+  
+  fit.cn_3_mixedsup = glmer(cn_3 ~ time_point*sup +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_sup = glmer(cn_3 ~ time_point + sup +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  anova(fit.cn_3_sup,fit.cn_3_mixedsup)
+  
+  fit.cn_3_mixedpost = glmer(cn_3 ~ time_point*post +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_post = glmer(cn_3 ~ time_point + post +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  anova(fit.cn_3_post,fit.cn_3_mixedpost)
+  
+  fit.cn_4_mixedlat = glmer(cn_4 ~ time_point*lat +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_lat = glmer(cn_4 ~ time_point + lat +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  anova(fit.cn_4_lat,fit.cn_4_mixedlat)
+  
+  fit.cn_4_mixedsup = glmer(cn_4 ~ time_point*sup +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_sup = glmer(cn_4 ~ time_point + sup +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  anova(fit.cn_4_lat,fit.cn_4_mixedsup)
+  
+  fit.cn_4_mixedpost = glmer(cn_4 ~ time_point*post +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_post = glmer(cn_4 ~ time_point + post +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  anova(fit.cn_4_post,fit.cn_4_mixedpost)
+  
+  fit.cn_5_mixedlat = glmer(cn_5 ~ time_point*lat +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_lat = glmer(cn_5 ~ time_point + lat +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  anova(fit.cn_5_lat,fit.cn_5_mixedlat)
+  
+  fit.cn_5_mixedsup = glmer(cn_5 ~ time_point*sup +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_sup = glmer(cn_5 ~ time_point + sup +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  anova(fit.cn_5_sup,fit.cn_5_mixedsup)
+  
+  fit.cn_5_mixedpost = glmer(cn_5 ~ time_point*post +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_post = glmer(cn_5 ~ time_point + post +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  anova(fit.cn_5_post,fit.cn_5_mixedpost)
+  
+  fit.cn_6_mixedlat = glmer(cn_6 ~ time_point*lat +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_lat = glmer(cn_6 ~ time_point + lat +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  anova(fit.cn_6_lat,fit.cn_6_mixedlat)
+  
+  fit.cn_6_mixedsup = glmer(cn_6 ~ time_point*sup +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_sup = glmer(cn_6 ~ time_point + sup +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  anova(fit.cn_6_sup,fit.cn_6_mixedsup)
+  
+  fit.cn_6_mixedpost = glmer(cn_6 ~ time_point*post +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_post = glmer(cn_6 ~ time_point + lat +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  anova(fit.cn_6_post,fit.cn_6_mixedpost)
+  
+  plot_model(fit.cn_3_mixedlat)
+  
+}
