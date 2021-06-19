@@ -316,7 +316,7 @@ fit.logit1.data %>%
 
 car::vif(fit.logit1)
 
-formul2 <- list(); model2 <- list(); p2nonadjust <- list()
+formula2 <- list(); model2 <- list(); p2nonadjust <- list()
 for (i in 1:length(independent_vars)) {
   formula2[[i]] = paste0("post_treat_condense", " ~ ", independent_vars[[i]])
   model2[[i]] = glm(formula2[[i]],data=data_file_stats,family="binomial") 
@@ -365,7 +365,7 @@ exp(coef(fit.logit2))
 
 fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
    
-formula4 <- list(); model1 <- list(); p4nonadjust <- list()
+formula4 <- list(); model4 <- list(); p4nonadjust <- list()
 for (i in 1:length(independent_vars)) {
   formula4[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
   model4[[i]] = glm(formula4[[i]],data=data_file_stats,family="binomial") 
@@ -380,7 +380,7 @@ for (i in 1:length(independent_vars)) {
   
 }
 p4adjust <- p.adjust(p4nonadjust,"BH")
-cbind(p4nonadjust,p4adjust)
+p4total <- cbind(p4nonadjust,p4adjust)
 
 fit.logit4 = glm(minor_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
 
