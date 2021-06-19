@@ -30,6 +30,7 @@ library(purrr)
 library(broom)
 library(lmerTest)
 library(GGally)
+library(car)
 
 
 setwd("~/SharedCode/cavernous_sinus_code")
@@ -38,6 +39,7 @@ dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
 saveFig = TRUE
 include_na_table = FALSE
 doOrdinal = FALSE
+doMixed = TRUE
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -273,6 +275,24 @@ walk2(plotnames, flatten(all_plots2), ~ggsave(filename = .x, plot = .y,
 plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
 plot3
 
+formula1 <- list(); model1 <- list(); p1nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula1[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
+  model1[[i]] = glm(formula1[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model1[[i]],type="II", test="Wald");
+  p1nonadjust[[i]] <- anova_temp[[3]]
+  
+
+  print(summary(model1[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p1adjust <- p.adjust(p1nonadjust,"BH")
+p1total <- cbind(p1nonadjust,p1adjust)
+
+
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
 
@@ -296,6 +316,22 @@ fit.logit1.data %>%
 
 car::vif(fit.logit1)
 
+formul2 <- list(); model2 <- list(); p2nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula2[[i]] = paste0("post_treat_condense", " ~ ", independent_vars[[i]])
+  model2[[i]] = glm(formula2[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model2[[i]],type="II", test="Wald");
+  p2nonadjust[[i]] <- anova_temp[[3]]
+  
+  
+  print(summary(model2[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p2adjust <- p.adjust(p2nonadjust,"BH")
+p2total <- cbind(p2nonadjust,p2adjust)
 
 fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
@@ -329,7 +365,23 @@ exp(coef(fit.logit2))
 
 fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
    
+formula4 <- list(); model1 <- list(); p4nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula4[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
+  model4[[i]] = glm(formula4[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model4[[i]],type="II", test="Wald");
+  p4nonadjust[[i]] <- anova_temp[[3]]
   
+  
+  print(summary(model4[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p4adjust <- p.adjust(p4nonadjust,"BH")
+cbind(p4nonadjust,p4adjust)
+
 fit.logit4 = glm(minor_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
 
 fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
@@ -416,6 +468,7 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   fit.cn_3_lat = glmer(cn_3 ~ time_point + lat +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   anova(fit.cn_3_lat,fit.cn_3_mixedlat)
+  Anova(fit.cn_3_mixedlat,type="II", test="Wald")
   
   fit.cn_3_mixedsup = glmer(cn_3 ~ time_point*sup +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   fit.cn_3_sup = glmer(cn_3 ~ time_point + sup +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
