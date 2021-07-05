@@ -400,6 +400,128 @@ pchisq(G,3,lower.tail = FALSE)
 
 # using epi in additional to surg_approach says rank deficient
 
+
+formula5 <- list(); model5 <- list(); p5nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula5[[i]] = paste0("po_1_cn_3", " ~ ", independent_vars[[i]])
+  model5[[i]] = glm(formula5[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model5[[i]],type="II", test="Wald");
+  p5nonadjust[[i]] <- round(anova_temp[[3]],3)
+  
+  
+  print(summary(model5[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p5adjust <- p.adjust(p5nonadjust,"BH")
+p5total <- cbind(p5nonadjust,p5adjust)
+
+formula6 <- list(); model6 <- list(); p6nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula6[[i]] = paste0("po_1_cn_4", " ~ ", independent_vars[[i]])
+  model6[[i]] = glm(formula6[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model6[[i]],type="II", test="Wald");
+  p6nonadjust[[i]] <- round(anova_temp[[3]],3)
+  
+  
+  print(summary(model6[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p6adjust <- p.adjust(p6nonadjust,"BH")
+p6total <- cbind(p6nonadjust,p6adjust)
+
+formula7 <- list(); model7 <- list(); p7nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula7[[i]] = paste0("po_1_cn_5", " ~ ", independent_vars[[i]])
+  model7[[i]] = glm(formula7[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model7[[i]],type="II", test="Wald");
+  p7nonadjust[[i]] <- round(anova_temp[[3]],3)
+  
+  
+  print(summary(model7[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p7adjust <- p.adjust(p7nonadjust,"BH")
+p7total <- cbind(p7nonadjust,p7adjust)
+
+formula8 <- list(); model8 <- list(); p8nonadjust <- list()
+for (i in 1:length(independent_vars)) {
+  formula8[[i]] = paste0("po_1_cn_6", " ~ ", independent_vars[[i]])
+  model8[[i]] = glm(formula8[[i]],data=data_file_stats,family="binomial") 
+  anova_temp <- Anova(model8[[i]],type="II", test="Wald");
+  p8nonadjust[[i]] <- round(anova_temp[[3]],3)
+  
+  
+  print(summary(model8[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+}
+p8adjust <- p.adjust(p8nonadjust,"BH")
+p8total <- cbind(p8nonadjust,p8adjust)
+# 
+# 
+# formula9 <- list(); model9 <- list(); p9nonadjust <- list()
+# for (i in 1:length(independent_vars)) {
+#   formula9[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
+#   model9[[i]] = glm(formula9[[i]],data=data_file_stats,family="binomial") 
+#   anova_temp <- Anova(model9[[i]],type="II", test="Wald");
+#   p9nonadjust[[i]] <- round(anova_temp[[3]],3)
+#   
+#   
+#   print(summary(model9[[i]]))
+#   print(anova_temp)
+#   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+#   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+#   
+# }
+# p9adjust <- p.adjust(p9nonadjust,"BH")
+# p9total <- cbind(p9nonadjust,p9adjust)
+# 
+# formula10 <- list(); model10 <- list(); p10nonadjust <- list()
+# for (i in 1:length(independent_vars)) {
+#   formula10[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
+#   model10[[i]] = glm(formula10[[i]],data=data_file_stats,family="binomial") 
+#   anova_temp <- Anova(model10[[i]],type="II", test="Wald");
+#   p10nonadjust[[i]] <- round(anova_temp[[3]],3)
+#   
+#   
+#   print(summary(model10[[i]]))
+#   print(anova_temp)
+#   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+#   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+#   
+# }
+# p10adjust <- p.adjust(p10nonadjust,"BH")
+# p10total <- cbind(p10nonadjust,p10adjust)
+# 
+# formula11 <- list(); model11 <- list(); p11nonadjust <- list()
+# for (i in 1:length(independent_vars)) {
+#   formula11[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
+#   model11[[i]] = glm(formula11[[i]],data=data_file_stats,family="binomial") 
+#   anova_temp <- Anova(model11[[i]],type="II", test="Wald");
+#   p11nonadjust[[i]] <- round(anova_temp[[3]],3)
+#   
+#   
+#   print(summary(model11[[i]]))
+#   print(anova_temp)
+#   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+#   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+#   
+# }
+# p11adjust <- p.adjust(p11nonadjust,"BH")
+# p11total <- cbind(p11nonadjust,p11adjust)
+
+
 if (doOrdinal){
 #fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
 fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
@@ -518,124 +640,5 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   
   plot_model(fit.cn_3_mixedlat)
   
-  formula5 <- list(); model5 <- list(); p5nonadjust <- list()
-  for (i in 1:length(independent_vars)) {
-    formula5[[i]] = paste0("po_1_cn_3", " ~ ", independent_vars[[i]])
-    model5[[i]] = glm(formula5[[i]],data=data_file_stats,family="binomial") 
-    anova_temp <- Anova(model5[[i]],type="II", test="Wald");
-    p5nonadjust[[i]] <- round(anova_temp[[3]],3)
-    
-    
-    print(summary(model5[[i]]))
-    print(anova_temp)
-    #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-    #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-    
-  }
-  p5adjust <- p.adjust(p5nonadjust,"BH")
-  p5total <- cbind(p5nonadjust,p5adjust)
-  
-  formula6 <- list(); model6 <- list(); p6nonadjust <- list()
-  for (i in 1:length(independent_vars)) {
-    formula6[[i]] = paste0("po_1_cn_4", " ~ ", independent_vars[[i]])
-    model6[[i]] = glm(formula6[[i]],data=data_file_stats,family="binomial") 
-    anova_temp <- Anova(model6[[i]],type="II", test="Wald");
-    p6nonadjust[[i]] <- round(anova_temp[[3]],3)
-    
-    
-    print(summary(model6[[i]]))
-    print(anova_temp)
-    #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-    #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-    
-  }
-  p6adjust <- p.adjust(p6nonadjust,"BH")
-  p6total <- cbind(p6nonadjust,p6adjust)
-  
-  formula7 <- list(); model7 <- list(); p7nonadjust <- list()
-  for (i in 1:length(independent_vars)) {
-    formula7[[i]] = paste0("po_1_cn_5", " ~ ", independent_vars[[i]])
-    model7[[i]] = glm(formula7[[i]],data=data_file_stats,family="binomial") 
-    anova_temp <- Anova(model7[[i]],type="II", test="Wald");
-    p7nonadjust[[i]] <- round(anova_temp[[3]],3)
-    
-    
-    print(summary(model7[[i]]))
-    print(anova_temp)
-    #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-    #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-    
-  }
-  p7adjust <- p.adjust(p7nonadjust,"BH")
-  p7total <- cbind(p7nonadjust,p7adjust)
-  
-  formula8 <- list(); model8 <- list(); p8nonadjust <- list()
-  for (i in 1:length(independent_vars)) {
-    formula8[[i]] = paste0("po_1_cn_6", " ~ ", independent_vars[[i]])
-    model8[[i]] = glm(formula8[[i]],data=data_file_stats,family="binomial") 
-    anova_temp <- Anova(model8[[i]],type="II", test="Wald");
-    p8nonadjust[[i]] <- round(anova_temp[[3]],3)
-    
-    
-    print(summary(model8[[i]]))
-    print(anova_temp)
-    #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-    #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-    
-  }
-  p8adjust <- p.adjust(p8nonadjust,"BH")
-  p8total <- cbind(p8nonadjust,p8adjust)
-  # 
-  # 
-  # formula9 <- list(); model9 <- list(); p9nonadjust <- list()
-  # for (i in 1:length(independent_vars)) {
-  #   formula9[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
-  #   model9[[i]] = glm(formula9[[i]],data=data_file_stats,family="binomial") 
-  #   anova_temp <- Anova(model9[[i]],type="II", test="Wald");
-  #   p9nonadjust[[i]] <- round(anova_temp[[3]],3)
-  #   
-  #   
-  #   print(summary(model9[[i]]))
-  #   print(anova_temp)
-  #   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-  #   
-  # }
-  # p9adjust <- p.adjust(p9nonadjust,"BH")
-  # p9total <- cbind(p9nonadjust,p9adjust)
-  # 
-  # formula10 <- list(); model10 <- list(); p10nonadjust <- list()
-  # for (i in 1:length(independent_vars)) {
-  #   formula10[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
-  #   model10[[i]] = glm(formula10[[i]],data=data_file_stats,family="binomial") 
-  #   anova_temp <- Anova(model10[[i]],type="II", test="Wald");
-  #   p10nonadjust[[i]] <- round(anova_temp[[3]],3)
-  #   
-  #   
-  #   print(summary(model10[[i]]))
-  #   print(anova_temp)
-  #   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-  #   
-  # }
-  # p10adjust <- p.adjust(p10nonadjust,"BH")
-  # p10total <- cbind(p10nonadjust,p10adjust)
-  # 
-  # formula11 <- list(); model11 <- list(); p11nonadjust <- list()
-  # for (i in 1:length(independent_vars)) {
-  #   formula11[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
-  #   model11[[i]] = glm(formula11[[i]],data=data_file_stats,family="binomial") 
-  #   anova_temp <- Anova(model11[[i]],type="II", test="Wald");
-  #   p11nonadjust[[i]] <- round(anova_temp[[3]],3)
-  #   
-  #   
-  #   print(summary(model11[[i]]))
-  #   print(anova_temp)
-  #   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-  #   
-  # }
-  # p11adjust <- p.adjust(p11nonadjust,"BH")
-  # p11total <- cbind(p11nonadjust,p11adjust)
   
 }
