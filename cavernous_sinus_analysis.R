@@ -231,7 +231,7 @@ data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode
                                               )
 
 } else{
-  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1)),
+  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0)),
                                                 post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
                                                 surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
                                                 epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
