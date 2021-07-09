@@ -380,7 +380,7 @@ fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + a
    
 formula4 <- list(); model4 <- list(); p4nonadjust <- list()
 for (i in 1:length(independent_vars)) {
-  formula4[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
+  formula4[[i]] = paste0("minor_comp", " ~ ", independent_vars[[i]])
   model4[[i]] = glm(formula4[[i]],data=data_file_stats,family="binomial") 
   anova_temp <- Anova(model4[[i]],type="II", test="Wald");
   p4nonadjust[[i]] <- round(anova_temp[[3]],3)
