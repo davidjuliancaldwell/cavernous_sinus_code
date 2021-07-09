@@ -199,6 +199,17 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               imm_cn_6 = `Immediate PO CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`
                                               )
 
+
+# recode no's to yes's
+
+data_file_stats <- data_file_stats %>% mutate(prev_rad = as.factor(recode(prev_rad,"1"=2,"2"=1)),
+                                              prev_surg = as.factor(recode(prev_surg,"1"=2,"2"=1)),
+                                              lat = as.factor(recode(lat,"1"=2,"2"=1)),
+                                              sup = as.factor(recode(sup,"1"=2,"2"=1)),
+                                              post = as.factor(recode(post,"1"=2,"2"=1))
+                                                              )
+
+
 if (doOrdinal){
 data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 0,"2" = 1,"3"=1,"4"=1)),
                                               post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
@@ -241,8 +252,8 @@ data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode
   
 }
 dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","po_6_3_months_cn_3","imm_cn_4","po_1_cn_4","po_6_3_months_cn_4","imm_cn_5","po_1_cn_5","po_6_3_months_cn_5","imm_cn_6","po_1_cn_6","po_6_3_months_cn_6")
-independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","lat","sup","post")
-independent_vars = c("surg_approach_condense","epi_condense","path_condense","prev_rad","prev_surg","lat","sup","post")
+independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","age","lat","sup","post")
+independent_vars = c("surg_approach_condense","epi_condense","path_condense","prev_rad","prev_surg","lat","sup","post","age")
 
 
 dependent_vars = set_names(dependent_vars)
@@ -586,76 +597,76 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
                                                                                  grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
   )))
   
-  fit.cn_3_mixed = glmer(cn_3 ~ surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_mixed = glmer(cn_3 ~ surg_approach_condense+prev_rad+prev_surg+lat+sup+post + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   fit.cn_3_mixed = glmer(cn_3 ~ time_point*lat + age+prev_rad+prev_surg+(1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   
-  fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  fit.cn_3_lat = glmer(cn_3 ~ time_point + lat +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_lat = glmer(cn_3 ~ time_point + lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   anova(fit.cn_3_lat,fit.cn_3_mixedlat)
   Anova(fit.cn_3_mixedlat,type="III")
   
-  fit.cn_3_mixedsup = glmer(cn_3 ~ time_point*sup +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  fit.cn_3_sup = glmer(cn_3 ~ time_point + sup +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_mixedsup = glmer(cn_3 ~ time_point*sup  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_sup = glmer(cn_3 ~ time_point + sup  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   anova(fit.cn_3_sup,fit.cn_3_mixedsup)
   Anova(fit.cn_3_mixedsup,type="III")
   
   
-  fit.cn_3_mixedpost = glmer(cn_3 ~ time_point*post +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  fit.cn_3_post = glmer(cn_3 ~ time_point + post +age + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_mixedpost = glmer(cn_3 ~ time_point*post  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  fit.cn_3_post = glmer(cn_3 ~ time_point + post  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   anova(fit.cn_3_post,fit.cn_3_mixedpost)
   Anova(fit.cn_3_mixedpost,type="III")
   
   
-  fit.cn_4_mixedlat = glmer(cn_4 ~ time_point*lat +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  fit.cn_4_lat = glmer(cn_4 ~ time_point + lat +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_mixedlat = glmer(cn_4 ~ time_point*lat  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_lat = glmer(cn_4 ~ time_point + lat  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
   anova(fit.cn_4_lat,fit.cn_4_mixedlat)
   Anova(fit.cn_4_mixedlat,type="III")
   
   
-  fit.cn_4_mixedsup = glmer(cn_4 ~ time_point*sup +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  fit.cn_4_sup = glmer(cn_4 ~ time_point + sup +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_mixedsup = glmer(cn_4 ~ time_point*sup  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_sup = glmer(cn_4 ~ time_point + sup  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
   anova(fit.cn_4_lat,fit.cn_4_mixedsup)
   Anova(fit.cn_4_mixedsup,type="III")
   
   
-  fit.cn_4_mixedpost = glmer(cn_4 ~ time_point*post +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  fit.cn_4_post = glmer(cn_4 ~ time_point + post +age + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_mixedpost = glmer(cn_4 ~ time_point*post  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
+  fit.cn_4_post = glmer(cn_4 ~ time_point + post  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
   anova(fit.cn_4_post,fit.cn_4_mixedpost)
   Anova(fit.cn_4_mixedpost,type="III")
   
   
-  fit.cn_5_mixedlat = glmer(cn_5 ~ time_point*lat +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  fit.cn_5_lat = glmer(cn_5 ~ time_point + lat +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_mixedlat = glmer(cn_5 ~ time_point*lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_lat = glmer(cn_5 ~ time_point + lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   anova(fit.cn_5_lat,fit.cn_5_mixedlat)
   Anova(fit.cn_5_mixedlat,type="III")
   
   
-  fit.cn_5_mixedsup = glmer(cn_5 ~ time_point*sup +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  fit.cn_5_sup = glmer(cn_5 ~ time_point + sup +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_mixedsup = glmer(cn_5 ~ time_point*sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_sup = glmer(cn_5 ~ time_point + sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   anova(fit.cn_5_sup,fit.cn_5_mixedsup)
   Anova(fit.cn_5_mixedsup,type="III")
   
   
-  fit.cn_5_mixedpost = glmer(cn_5 ~ time_point*post +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  fit.cn_5_post = glmer(cn_5 ~ time_point + post +age + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_mixedpost = glmer(cn_5 ~ time_point*post  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  fit.cn_5_post = glmer(cn_5 ~ time_point + post  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   anova(fit.cn_5_post,fit.cn_5_mixedpost)
   Anova(fit.cn_5_mixedpost,type="III")
   
   
-  fit.cn_6_mixedlat = glmer(cn_6 ~ time_point*lat +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  fit.cn_6_lat = glmer(cn_6 ~ time_point + lat +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_mixedlat = glmer(cn_6 ~ time_point*lat  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_lat = glmer(cn_6 ~ time_point + lat  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
   anova(fit.cn_6_lat,fit.cn_6_mixedlat)
   Anova(fit.cn_6_mixedlat,type="III")
   
   
-  fit.cn_6_mixedsup = glmer(cn_6 ~ time_point*sup +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  fit.cn_6_sup = glmer(cn_6 ~ time_point + sup +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_mixedsup = glmer(cn_6 ~ time_point*sup  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_sup = glmer(cn_6 ~ time_point + sup  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
   anova(fit.cn_6_sup,fit.cn_6_mixedsup)
   Anova(fit.cn_6_mixedsup,type="III")
   
   
-  fit.cn_6_mixedpost = glmer(cn_6 ~ time_point*post +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  fit.cn_6_post = glmer(cn_6 ~ time_point + lat +age + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_mixedpost = glmer(cn_6 ~ time_point*post  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
+  fit.cn_6_post = glmer(cn_6 ~ time_point + lat  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
   anova(fit.cn_6_post,fit.cn_6_mixedpost)
   Anova(fit.cn_6_mixedpost,type="III")
   
