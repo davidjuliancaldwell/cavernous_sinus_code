@@ -597,6 +597,12 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
                                                                                  grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
   )))
   
+  # set contrast options for unordered and ordered variables 
+  options(contrasts = rep ("contr.treatment", 2))
+  options(contrasts = c("contr.sum","contr.poly"))
+  
+  
+  
   fit.cn_3_mixed = glmer(cn_3 ~ surg_approach_condense+prev_rad+prev_surg+lat+sup+post + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   fit.cn_3_mixed = glmer(cn_3 ~ time_point*lat + age+prev_rad+prev_surg+(1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   
