@@ -36,7 +36,7 @@ library(GGally)
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
-saveFig = FALSE
+saveFig = TRUE
 include_na_table = FALSE
 doOrdinal = FALSE
 doMixed = TRUE
@@ -186,16 +186,16 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               prev_rad = `Previous radiation therapy ((Y=1, 2 = N)`,
                                               prev_surg = `Previous surgery (Y=1, 2 = N)`,
                                               po_1_cn_3 = `PO 1 year (or last follow up) CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
-                                              po_6_3_months_cn_3 = `Post-op 6 weeks-3 months  CN 3 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_3 = `PO 6 weeks-3 months CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               imm_cn_3 = `Immediate PO CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_4 = `PO 1 year (or last follow up) CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
-                                              po_6_3_months_cn_4 = `Post-op 6 weeks-3 months  CN 4 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_4 = `PO 6 weeks-3 months CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               imm_cn_4 = `Immediate PO CN 4 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_5 = `PO 1 year (or last follow up) CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
-                                              po_6_3_months_cn_5 = `Post-op 6 weeks-3 months  CN 5 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_5 = `PO 6 weeks-3 months CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               imm_cn_5 = `Immediate PO CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_6 = `PO 1 year (or last follow up) CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
-                                              po_6_3_months_cn_6 = `Post-op 6 weeks-3 months  CN 6 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_6 = `PO 6 weeks-3 months CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               imm_cn_6 = `Immediate PO CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`
                                               )
 
@@ -600,13 +600,17 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   # set contrast options for unordered and ordered variables 
   options(contrasts = rep ("contr.treatment", 2))
   options(contrasts = c("contr.sum","contr.poly"))
+  contr.sum(3)
   
-  
+  p <- ggplot(data = subset(data_file_stats_long3,!is.na(cn_3)), aes(x = time_point, y = cn_3, group = id,col=lat))
+  p+geom_jitter(height=0.2,width=0.2)
   
   fit.cn_3_mixed = glmer(cn_3 ~ surg_approach_condense+prev_rad+prev_surg+lat+sup+post + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   fit.cn_3_mixed = glmer(cn_3 ~ time_point*lat + age+prev_rad+prev_surg+(1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   
+  fit.cn_3_mixedlat = glmmPQL(cn_3 ~ time_point*lat,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long3,family=binomial)
   fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
+  
   fit.cn_3_lat = glmer(cn_3 ~ time_point + lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   anova(fit.cn_3_lat,fit.cn_3_mixedlat)
   Anova(fit.cn_3_mixedlat,type="III")
@@ -640,12 +644,15 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   anova(fit.cn_4_post,fit.cn_4_mixedpost)
   Anova(fit.cn_4_mixedpost,type="III")
   
+  p <- ggplot(data = subset(data_file_stats_long5,!is.na(cn_5)), aes(x = time_point, y = cn_5, group = id,col=lat))
+  p+geom_jitter(height=0.2,width=0.2)
   
   fit.cn_5_mixedlat = glmer(cn_5 ~ time_point*lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   fit.cn_5_lat = glmer(cn_5 ~ time_point + lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   anova(fit.cn_5_lat,fit.cn_5_mixedlat)
   Anova(fit.cn_5_mixedlat,type="III")
   
+  fit.cn_5_mixedsup = glmmPQL(cn_5 ~ time_point*sup,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
   
   fit.cn_5_mixedsup = glmer(cn_5 ~ time_point*sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   fit.cn_5_sup = glmer(cn_5 ~ time_point + sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
