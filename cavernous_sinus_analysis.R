@@ -31,7 +31,9 @@ library(purrr)
 library(broom)
 library(lmerTest)
 library(GGally)
-
+library(nlme)
+library(glmmTMB)
+library(AER)
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
@@ -599,6 +601,15 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   
   # set contrast options for unordered and ordered variables 
   options(contrasts = rep ("contr.treatment", 2))
+  
+  
+  fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
+  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
+  fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
+  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
+  
+  fit.cn_time_3 = glmer(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
+  
   options(contrasts = c("contr.sum","contr.poly"))
   contr.sum(3)
   
@@ -609,6 +620,11 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   fit.cn_3_mixed = glmer(cn_3 ~ time_point*lat + age+prev_rad+prev_surg+(1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   
   fit.cn_3_mixedlat = glmmPQL(cn_3 ~ time_point*lat,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long3,family=binomial)
+  fit.cn_3_mixedlat = glmmTMB(cn_3 ~ time_point*lat + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
+  pairs(emmeans(fit.cn_3_mixedlat, "time_point", by = "lat"))
+  dispersiontest(fit.cn_3_mixedlat)
+  
+  
   fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
   
   fit.cn_3_lat = glmer(cn_3 ~ time_point + lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
