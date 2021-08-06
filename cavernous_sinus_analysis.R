@@ -34,6 +34,7 @@ library(GGally)
 library(nlme)
 library(glmmTMB)
 library(AER)
+library(DHARMa)
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
@@ -602,14 +603,27 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   # set contrast options for unordered and ordered variables 
   options(contrasts = rep ("contr.treatment", 2))
   
+  fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
+  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id), data=data_file_stats_long4,family=binomial)
+  fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id), data=data_file_stats_long5,family=binomial)
+  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id), data=data_file_stats_long6,family=binomial)
   
-  fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
-  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
-  fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
-  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
+ # fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
+#  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
+ # fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
+#  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
   
   fit.cn_time_3 = glmer(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
+  emm_model_3 = emmeans(fit.cn_time_3, "time_point")
+  pairs(emm_model_3, reverse = TRUE)
   
+  
+  simulationOutput <- simulateResiduals(fittedModel = fit.cn_time_3)
+  plot(simulationOutput, asFactor = T)
+ # plotResiduals(simulationOutput,data_file_stats_long3$time_point, quantreg = T)
+  
+  
+
   options(contrasts = c("contr.sum","contr.poly"))
   contr.sum(3)
   
@@ -622,7 +636,7 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   fit.cn_3_mixedlat = glmmPQL(cn_3 ~ time_point*lat,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long3,family=binomial)
   fit.cn_3_mixedlat = glmmTMB(cn_3 ~ time_point*lat + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
   pairs(emmeans(fit.cn_3_mixedlat, "time_point", by = "lat"))
-  dispersiontest(fit.cn_3_mixedlat)
+  #dispersiontest(fit.cn_3_mixedlat)
   
   
   fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
@@ -663,21 +677,37 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   p <- ggplot(data = subset(data_file_stats_long5,!is.na(cn_5)), aes(x = time_point, y = cn_5, group = id,col=lat))
   p+geom_jitter(height=0.2,width=0.2)
   
+  
+  fit.cn_5_mixedlat_PQL = glmmPQL(cn_5 ~ time_point*lat,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
+  fit.cn_5_mixedlat_PQL = glmmPQL(cn_5 ~ time_point*lat,random = list(id = ~1), data=data_file_stats_long5,family=binomial)
+  
+  
+  fit.cn_5_mixedlat_TMB = glmmTMB(cn_5 ~ time_point*lat  + (1|id), data=data_file_stats_long5,family=binomial)
+  fit.cn_5_mixedlat_TMB = glmmTMB(cn_5 ~ time_point*lat  + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
+  
   fit.cn_5_mixedlat = glmer(cn_5 ~ time_point*lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   fit.cn_5_lat = glmer(cn_5 ~ time_point + lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   anova(fit.cn_5_lat,fit.cn_5_mixedlat)
   Anova(fit.cn_5_mixedlat,type="III")
   
-  fit.cn_5_mixedsup = glmmPQL(cn_5 ~ time_point*sup,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
+  fit.cn_5_mixedsup_PQL = glmmPQL(cn_5 ~ time_point*sup,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
+  fit.cn_5_mixedsup_TMB = glmmTMB(cn_5 ~ time_point*sup  + (1|id), data=data_file_stats_long5,family=binomial)
   
   fit.cn_5_mixedsup = glmer(cn_5 ~ time_point*sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   fit.cn_5_sup = glmer(cn_5 ~ time_point + sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   anova(fit.cn_5_sup,fit.cn_5_mixedsup)
   Anova(fit.cn_5_mixedsup,type="III")
   
+  fit.cn_5_mixedpost = glmmPQL(cn_5 ~ time_point*sup,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
+  
   
   fit.cn_5_mixedpost = glmer(cn_5 ~ time_point*post  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
   fit.cn_5_post = glmer(cn_5 ~ time_point + post  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
+  
+  fit.cn_5_mixedpost = glmmTMB(cn_5 ~ time_point*post  + (1|id), data=data_file_stats_long5,family=binomial)
+  fit.cn_5_post = glmmTMB(cn_5 ~ time_point + post  + (1|id), data=data_file_stats_long5,family=binomial)
+  
+  
   anova(fit.cn_5_post,fit.cn_5_mixedpost)
   Anova(fit.cn_5_mixedpost,type="III")
   
