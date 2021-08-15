@@ -35,11 +35,13 @@ library(nlme)
 library(glmmTMB)
 library(AER)
 library(DHARMa)
+library(elrm)
+library(stats)
 
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
-saveFig = TRUE
+saveFig = FALSE
 include_na_table = FALSE
 doOrdinal = FALSE
 doMixed = TRUE
@@ -292,6 +294,7 @@ plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter
 plot3
 
 formula1 <- list(); model1 <- list(); p1nonadjust <- list()
+formula1_subsets <- list(); formula1_totals <- list();totals1 <- list(); subsets1<-list();data_frame1<- list();resexact_1<-list()
 for (i in 1:length(independent_vars)) {
   formula1[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
   model1[[i]] = glm(formula1[[i]],data=data_file_stats,family="binomial") 
@@ -304,11 +307,27 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
+  formula1_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula1_subsets[[i]] = paste0("~resect_condense + ", independent_vars[[i]])
+  totals1[[i]] = xtabs(formula1_totals[[i]],data=data_file_stats)
+  subsets1[[i]] = xtabs(formula1_subsets[[i]],data=data_file_stats)
+  data_frame1[[i]] = data.frame(indepvar = 1:length(totals1[[i]]),depvar=subsets1[[i]][2,],n=totals1[[i]])
+  resexact_1[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+                    burnIn=5000, data=data_frame1[[i]], r=2)
+  summary(resexact_1[[i]])
+  
 }
 p1adjust <- p.adjust(p1nonadjust,"BH")
 p1total <- cbind(p1nonadjust,p1adjust)
+a
 
-
+interest_var = resexact_1
+for (i in 4:(length(independent_vars)-1)) {
+print((round(exp(interest_var[[i]]$coeffs),2)))
+print((round(exp(interest_var[[i]]$coeffs.ci),2)))
+print((round(interest_var[[i]]$p.values,2)))
+print(i)  
+}
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
 
@@ -333,6 +352,8 @@ fit.logit1.data %>%
 car::vif(fit.logit1)
 
 formula2 <- list(); model2 <- list(); p2nonadjust <- list()
+formula2_subsets <- list(); formula2_totals <- list();totals2 <- list(); subsets2<-list();data_frame2<- list();resexact_2<-list()
+
 for (i in 1:length(independent_vars)) {
   formula2[[i]] = paste0("post_treat_condense", " ~ ", independent_vars[[i]])
   model2[[i]] = glm(formula2[[i]],data=data_file_stats,family="binomial") 
@@ -342,8 +363,18 @@ for (i in 1:length(independent_vars)) {
   
   print(summary(model2[[i]]))
   print(anova_temp)
-  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #print(wald.test(b=coef(model1[[i]]),Sigma = vcov(model1[[i]]),Terms= 1:3))
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  
+  formula2_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula2_subsets[[i]] = paste0("~post_treat_condense + ", independent_vars[[i]])
+  totals2[[i]] = xtabs(formula2_totals[[i]],data=data_file_stats)
+  subsets2[[i]] = xtabs(formula2_subsets[[i]],data=data_file_stats)
+  data_frame2[[i]] = data.frame(indepvar = 1:length(totals2[[i]]),depvar=subsets2[[i]][2,],n=totals2[[i]])
+  resexact_2[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=5000000, 
+                         burnIn=5000, data=data_frame2[[i]], r=2)
+  summary(resexact_2[[i]])
   
 }
 p2adjust <- p.adjust(p2nonadjust,"BH")
@@ -382,6 +413,8 @@ exp(coef(fit.logit2))
 fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
    
 formula4 <- list(); model4 <- list(); p4nonadjust <- list()
+formula4_subsets <- list(); formula4_totals <- list();totals4 <- list(); subsets4<-list();data_frame4<- list();resexact_4<-list()
+
 for (i in 1:length(independent_vars)) {
   formula4[[i]] = paste0("minor_comp", " ~ ", independent_vars[[i]])
   model4[[i]] = glm(formula4[[i]],data=data_file_stats,family="binomial") 
@@ -393,6 +426,15 @@ for (i in 1:length(independent_vars)) {
   print(anova_temp)
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  formula4_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula4_subsets[[i]] = paste0("~minor_comp + ", independent_vars[[i]])
+  totals4[[i]] = xtabs(formula4_totals[[i]],data=data_file_stats)
+  subsets4[[i]] = xtabs(formula4_subsets[[i]],data=data_file_stats)
+  data_frame4[[i]] = data.frame(indepvar = 1:length(totals4[[i]]),depvar=subsets4[[i]][2,],n=totals4[[i]])
+  resexact_4[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=5000000, 
+                         burnIn=5000, data=data_frame4[[i]], r=2)
+  summary(resexact_4[[i]])
   
 }
 p4adjust <- p.adjust(p4nonadjust,"BH")
@@ -416,6 +458,8 @@ pchisq(G,3,lower.tail = FALSE)
 
 
 formula5 <- list(); model5 <- list(); p5nonadjust <- list()
+formula5_subsets <- list(); formula5_totals <- list();totals5 <- list(); subsets5<-list();data_frame5<- list();resexact_5<-list()
+
 for (i in 1:length(independent_vars)) {
   formula5[[i]] = paste0("po_1_cn_3", " ~ ", independent_vars[[i]])
   model5[[i]] = glm(formula5[[i]],data=data_file_stats,family="binomial") 
@@ -428,11 +472,22 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
+  formula5_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula5_subsets[[i]] = paste0("~po_1_cn_3 + ", independent_vars[[i]])
+  totals5[[i]] = xtabs(formula5_totals[[i]],data=data_file_stats)
+  subsets5[[i]] = xtabs(formula5_subsets[[i]],data=data_file_stats)
+  data_frame5[[i]] = data.frame(indepvar = 1:length(totals5[[i]]),depvar=subsets5[[i]][2,],n=totals5[[i]])
+  resexact_5[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=5000000, 
+                         burnIn=5000, data=data_frame5[[i]], r=2)
+  summary(resexact_5[[i]])
+  
 }
 p5adjust <- p.adjust(p5nonadjust,"BH")
 p5total <- cbind(p5nonadjust,p5adjust)
 
 formula6 <- list(); model6 <- list(); p6nonadjust <- list()
+formula6_subsets <- list(); formula6_totals <- list();totals6 <- list(); subsets6<-list();data_frame6<- list();resexact_6<-list()
+
 for (i in 1:length(independent_vars)) {
   formula6[[i]] = paste0("po_1_cn_4", " ~ ", independent_vars[[i]])
   model6[[i]] = glm(formula6[[i]],data=data_file_stats,family="binomial") 
@@ -445,11 +500,22 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
+  formula6_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula6_subsets[[i]] = paste0("~po_1_cn_4 + ", independent_vars[[i]])
+  totals6[[i]] = xtabs(formula6_totals[[i]],data=data_file_stats)
+  subsets6[[i]] = xtabs(formula6_subsets[[i]],data=data_file_stats)
+  data_frame6[[i]] = data.frame(indepvar = 1:length(totals6[[i]]),depvar=subsets6[[i]][2,],n=totals6[[i]])
+  resexact_6[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=22000, 
+                         burnIn=2000, data=data_frame6[[i]], r=2)
+  summary(resexact_6[[i]])
+  
 }
 p6adjust <- p.adjust(p6nonadjust,"BH")
 p6total <- cbind(p6nonadjust,p6adjust)
 
 formula7 <- list(); model7 <- list(); p7nonadjust <- list()
+formula7_subsets <- list(); formula7_totals <- list();totals7 <- list(); subsets7<-list();data_frame7<- list();resexact_7<-list()
+
 for (i in 1:length(independent_vars)) {
   formula7[[i]] = paste0("po_1_cn_5", " ~ ", independent_vars[[i]])
   model7[[i]] = glm(formula7[[i]],data=data_file_stats,family="binomial") 
@@ -462,11 +528,22 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
+  formula7_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula7_subsets[[i]] = paste0("~po_1_cn_5 + ", independent_vars[[i]])
+  totals7[[i]] = xtabs(formula7_totals[[i]],data=data_file_stats)
+  subsets7[[i]] = xtabs(formula7_subsets[[i]],data=data_file_stats)
+  data_frame7[[i]] = data.frame(indepvar = 1:length(totals7[[i]]),depvar=subsets7[[i]][2,],n=totals7[[i]])
+  resexact_7[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=22000, 
+                         burnIn=2000, data=data_frame7[[i]], r=2)
+  summary(resexact_7[[i]])
+  
 }
 p7adjust <- p.adjust(p7nonadjust,"BH")
 p7total <- cbind(p7nonadjust,p7adjust)
 
 formula8 <- list(); model8 <- list(); p8nonadjust <- list()
+formula8_subsets <- list(); formula8_totals <- list();totals8 <- list(); subsets8<-list();data_frame8<- list();resexact_8<-list()
+
 for (i in 1:length(independent_vars)) {
   formula8[[i]] = paste0("po_1_cn_6", " ~ ", independent_vars[[i]])
   model8[[i]] = glm(formula8[[i]],data=data_file_stats,family="binomial") 
@@ -478,6 +555,15 @@ for (i in 1:length(independent_vars)) {
   print(anova_temp)
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  formula8_totals[[i]] = paste0("~",independent_vars[[i]])
+  formula8_subsets[[i]] = paste0("~po_1_cn_6 + ", independent_vars[[i]])
+  totals8[[i]] = xtabs(formula8_totals[[i]],data=data_file_stats)
+  subsets8[[i]] = xtabs(formula8_subsets[[i]],data=data_file_stats)
+  data_frame8[[i]] = data.frame(indepvar = 1:length(totals8[[i]]),depvar=subsets8[[i]][2,],n=totals8[[i]])
+  resexact_8[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=50000, 
+                         burnIn=2000, data=data_frame8[[i]], r=2)
+  summary(resexact_8[[i]])
   
 }
 p8adjust <- p.adjust(p8nonadjust,"BH")
