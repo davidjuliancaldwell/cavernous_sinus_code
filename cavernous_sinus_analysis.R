@@ -505,8 +505,8 @@ for (i in 1:length(independent_vars)) {
   totals6[[i]] = xtabs(formula6_totals[[i]],data=data_file_stats)
   subsets6[[i]] = xtabs(formula6_subsets[[i]],data=data_file_stats)
   data_frame6[[i]] = data.frame(indepvar = 1:length(totals6[[i]]),depvar=subsets6[[i]][2,],n=totals6[[i]])
-  resexact_6[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=22000, 
-                         burnIn=2000, data=data_frame6[[i]], r=2)
+  resexact_6[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=5000000, 
+                         burnIn=5000, data=data_frame6[[i]], r=2)
   summary(resexact_6[[i]])
   
 }
@@ -533,8 +533,8 @@ for (i in 1:length(independent_vars)) {
   totals7[[i]] = xtabs(formula7_totals[[i]],data=data_file_stats)
   subsets7[[i]] = xtabs(formula7_subsets[[i]],data=data_file_stats)
   data_frame7[[i]] = data.frame(indepvar = 1:length(totals7[[i]]),depvar=subsets7[[i]][2,],n=totals7[[i]])
-  resexact_7[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=22000, 
-                         burnIn=2000, data=data_frame7[[i]], r=2)
+  resexact_7[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = ~indepvar, iter=500000, 
+                         burnIn=5000, data=data_frame7[[i]], r=2)
   summary(resexact_7[[i]])
   
 }
