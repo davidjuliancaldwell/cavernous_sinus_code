@@ -41,7 +41,7 @@ library(stats)
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
-saveFig = FALSE
+saveFig = TRUE
 include_na_table = FALSE
 doOrdinal = FALSE
 doMixed = TRUE
@@ -317,23 +317,29 @@ for (i in 1:length(independent_vars)) {
                     burnIn=5000, data=data_frame1[[i]], r=2)
   }
   else {
-    resexact_1[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
+    resexact_1[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
     }
   summary(resexact_1[[i]])
   
+  
+  
 }
+
+interest_var = resexact_1
+for (i in 1:(length(independent_vars))) {
+  print(independent_vars[[i]])
+  print((round(exp(interest_var[[i]]$coeffs),2)))
+  print((round(exp(interest_var[[i]]$coeffs.ci),2)))
+  print((round(interest_var[[i]]$p.values,2)))
+  
+}
+
 p1adjust <- p.adjust(p1nonadjust,"BH")
 p1total <- cbind(p1nonadjust,p1adjust)
 a
 
-interest_var = resexact_1
-for (i in 4:(length(independent_vars)-1)) {
-print((round(exp(interest_var[[i]]$coeffs),2)))
-print((round(exp(interest_var[[i]]$coeffs.ci),2)))
-print((round(interest_var[[i]]$p.values,2)))
-print(i)  
-}
+
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
 
@@ -383,8 +389,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame2[[i]], r=2)
   }
   else {
-    resexact_2[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
-                           burnIn=5000, data=data_frame2[[i]], r=2)
+    resexact_2[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+                             burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_2[[i]])
   
@@ -449,8 +455,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame4[[i]], r=2)
   }
   else {
-    resexact_4[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
-                           burnIn=5000, data=data_frame4[[i]], r=2)
+    resexact_4[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_4[[i]])
   
@@ -500,8 +506,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame5[[i]], r=2)
   }
   else {
-    resexact_5[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
-                           burnIn=5000, data=data_frame5[[i]], r=2)
+    resexact_5[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_5[[i]])
   
@@ -568,8 +574,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame7[[i]], r=2)
   }
   else {
-    resexact_7[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
-                           burnIn=5000, data=data_frame7[[i]], r=2)
+    resexact_7[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_7[[i]])
   
