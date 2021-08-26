@@ -540,8 +540,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame6[[i]], r=2)
   }
   else {
-    resexact_6[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
-                           burnIn=5000, data=data_frame6[[i]], r=2)
+    resexact_6[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_6[[i]])
   
@@ -608,8 +608,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame8[[i]], r=2)
   }
   else {
-    resexact_8[[i]] = elrm(depvar/n.Freq ~ indepvar, interest = indepvar, iter=5000000, 
-                           burnIn=5000, data=data_frame8[[i]], r=2)
+    resexact_8[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_8[[i]])
   
