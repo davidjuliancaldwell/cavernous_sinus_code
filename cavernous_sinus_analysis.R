@@ -317,12 +317,11 @@ for (i in 1:length(independent_vars)) {
                     burnIn=5000, data=data_frame1[[i]], r=2)
   }
   else {
-    resexact_1[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+    resexact_1[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
     }
   summary(resexact_1[[i]])
-  
-  
+
   
 }
 
@@ -389,8 +388,8 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame2[[i]], r=2)
   }
   else {
-    resexact_2[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
-                             burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_2[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_2[[i]])
   
@@ -455,7 +454,7 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame4[[i]], r=2)
   }
   else {
-    resexact_4[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+    resexact_4[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_4[[i]])
@@ -506,7 +505,7 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame5[[i]], r=2)
   }
   else {
-    resexact_5[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+    resexact_5[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_5[[i]])
@@ -540,7 +539,7 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame6[[i]], r=2)
   }
   else {
-    resexact_6[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+    resexact_6[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_6[[i]])
@@ -574,7 +573,7 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame7[[i]], r=2)
   }
   else {
-    resexact_7[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+    resexact_7[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_7[[i]])
@@ -608,7 +607,7 @@ for (i in 1:length(independent_vars)) {
                            burnIn=5000, data=data_frame8[[i]], r=2)
   }
   else {
-    resexact_8[[i]] = elrm(depvar/n.Freq ~ n.age, interest = ~n.age, iter=5000000, 
+    resexact_8[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
   }
   summary(resexact_8[[i]])
