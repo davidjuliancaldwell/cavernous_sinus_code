@@ -307,17 +307,16 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
-  formula1_totals[[i]] = paste0("~",independent_vars[[i]])
   formula1_subsets[[i]] = paste0("~resect_condense + ", independent_vars[[i]])
-  totals1[[i]] = xtabs(formula1_totals[[i]],data=data_file_stats)
   subsets1[[i]] = xtabs(formula1_subsets[[i]],data=data_file_stats)
-  data_frame1[[i]] = data.frame(indepvar = 1:length(totals1[[i]]),depvar=subsets1[[i]][2,],n=totals1[[i]])
+  totals1[[i]]  = subsets1[[i]][1,]+subsets1[[i]][2,]
+  data_frame1[[i]] = data.frame(indepvar = levels(as.data.frame(subsets1[[i]])[,2]),depvar=subsets1[[i]][2,],n=totals1[[i]])
   if (i<length(independent_vars)){
-  resexact_1[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+  resexact_1[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                     burnIn=5000, data=data_frame1[[i]], r=2)
   }
   else {
-    resexact_1[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
+    resexact_1[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
     }
   summary(resexact_1[[i]])
@@ -378,18 +377,17 @@ for (i in 1:length(independent_vars)) {
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
   
-  formula2_totals[[i]] = paste0("~",independent_vars[[i]])
   formula2_subsets[[i]] = paste0("~post_treat_condense + ", independent_vars[[i]])
-  totals2[[i]] = xtabs(formula2_totals[[i]],data=data_file_stats)
   subsets2[[i]] = xtabs(formula2_subsets[[i]],data=data_file_stats)
-  data_frame2[[i]] = data.frame(indepvar = 1:length(totals2[[i]]),depvar=subsets2[[i]][2,],n=totals2[[i]])
+  totals2[[i]]  = subsets2[[i]][1,]+subsets2[[i]][2,]
+  data_frame2[[i]] = data.frame(indepvar = levels(as.data.frame(subsets2[[i]])[,2]),depvar=subsets2[[i]][2,],n=totals2[[i]])
   if (i<length(independent_vars)){
-    resexact_2[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+    resexact_2[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame2[[i]], r=2)
   }
   else {
-    resexact_2[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
-                           burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_2[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame2[[i]], r=2)
   }
   summary(resexact_2[[i]])
   
@@ -444,18 +442,17 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
-  formula4_totals[[i]] = paste0("~",independent_vars[[i]])
   formula4_subsets[[i]] = paste0("~minor_comp + ", independent_vars[[i]])
-  totals4[[i]] = xtabs(formula4_totals[[i]],data=data_file_stats)
   subsets4[[i]] = xtabs(formula4_subsets[[i]],data=data_file_stats)
-  data_frame4[[i]] = data.frame(indepvar = 1:length(totals4[[i]]),depvar=subsets4[[i]][2,],n=totals4[[i]])
+  totals4[[i]]  = subsets4[[i]][1,]+subsets4[[i]][2,]
+  data_frame4[[i]] = data.frame(indepvar = levels(as.data.frame(subsets4[[i]])[,2]),depvar=subsets4[[i]][2,],n=totals4[[i]])
   if (i<length(independent_vars)){
-    resexact_4[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+    resexact_4[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame4[[i]], r=2)
   }
   else {
-    resexact_4[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
-                           burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_4[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame4[[i]], r=2)
   }
   summary(resexact_4[[i]])
   
@@ -495,18 +492,17 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
-  formula5_totals[[i]] = paste0("~",independent_vars[[i]])
   formula5_subsets[[i]] = paste0("~po_1_cn_3 + ", independent_vars[[i]])
-  totals5[[i]] = xtabs(formula5_totals[[i]],data=data_file_stats)
   subsets5[[i]] = xtabs(formula5_subsets[[i]],data=data_file_stats)
-  data_frame5[[i]] = data.frame(indepvar = 1:length(totals5[[i]]),depvar=subsets5[[i]][2,],n=totals5[[i]])
+  totals5[[i]]  = subsets5[[i]][1,]+subsets5[[i]][2,]
+  data_frame5[[i]] = data.frame(indepvar = levels(as.data.frame(subsets5[[i]])[,2]),depvar=subsets5[[i]][2,],n=totals5[[i]])
   if (i<length(independent_vars)){
-    resexact_5[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+    resexact_5[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame5[[i]], r=2)
   }
   else {
-    resexact_5[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
-                           burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_5[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame5[[i]], r=2)
   }
   summary(resexact_5[[i]])
   
@@ -529,18 +525,17 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
-  formula6_totals[[i]] = paste0("~",independent_vars[[i]])
   formula6_subsets[[i]] = paste0("~po_1_cn_4 + ", independent_vars[[i]])
-  totals6[[i]] = xtabs(formula6_totals[[i]],data=data_file_stats)
   subsets6[[i]] = xtabs(formula6_subsets[[i]],data=data_file_stats)
-  data_frame6[[i]] = data.frame(indepvar = 1:length(totals6[[i]]),depvar=subsets6[[i]][2,],n=totals6[[i]])
+  totals6[[i]]  = subsets6[[i]][1,]+subsets6[[i]][2,]
+  data_frame6[[i]] = data.frame(indepvar = levels(as.data.frame(subsets6[[i]])[,2]),depvar=subsets6[[i]][2,],n=totals6[[i]])
   if (i<length(independent_vars)){
-    resexact_6[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+    resexact_6[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame6[[i]], r=2)
   }
   else {
-    resexact_6[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
-                           burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_6[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame6[[i]], r=2)
   }
   summary(resexact_6[[i]])
   
@@ -563,18 +558,17 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
-  formula7_totals[[i]] = paste0("~",independent_vars[[i]])
   formula7_subsets[[i]] = paste0("~po_1_cn_5 + ", independent_vars[[i]])
-  totals7[[i]] = xtabs(formula7_totals[[i]],data=data_file_stats)
   subsets7[[i]] = xtabs(formula7_subsets[[i]],data=data_file_stats)
-  data_frame7[[i]] = data.frame(indepvar = 1:length(totals7[[i]]),depvar=subsets7[[i]][2,],n=totals7[[i]])
+  totals7[[i]]  = subsets7[[i]][1,]+subsets7[[i]][2,]
+  data_frame7[[i]] = data.frame(indepvar = levels(as.data.frame(subsets7[[i]])[,2]),depvar=subsets7[[i]][2,],n=totals7[[i]])
   if (i<length(independent_vars)){
-    resexact_7[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+    resexact_7[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame7[[i]], r=2)
   }
   else {
-    resexact_7[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
-                           burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_7[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame7[[i]], r=2)
   }
   summary(resexact_7[[i]])
   
@@ -597,18 +591,17 @@ for (i in 1:length(independent_vars)) {
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
   
-  formula8_totals[[i]] = paste0("~",independent_vars[[i]])
   formula8_subsets[[i]] = paste0("~po_1_cn_6 + ", independent_vars[[i]])
-  totals8[[i]] = xtabs(formula8_totals[[i]],data=data_file_stats)
   subsets8[[i]] = xtabs(formula8_subsets[[i]],data=data_file_stats)
-  data_frame8[[i]] = data.frame(indepvar = 1:length(totals8[[i]]),depvar=subsets8[[i]][2,],n=totals8[[i]])
+  totals8[[i]]  = subsets8[[i]][1,]+subsets8[[i]][2,]
+  data_frame8[[i]] = data.frame(indepvar = levels(as.data.frame(subsets8[[i]])[,2]),depvar=subsets8[[i]][2,],n=totals8[[i]])
   if (i<length(independent_vars)){
-    resexact_8[[i]] = elrm(depvar/n.Freq ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+    resexact_8[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame8[[i]], r=2)
   }
   else {
-    resexact_8[[i]] = elrm(depvar/n.Freq ~ as.integer(n.age), interest = ~as.integer(n.age), iter=5000000, 
-                           burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_8[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame8[[i]], r=2)
   }
   summary(resexact_8[[i]])
   
@@ -866,4 +859,8 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   plot_model(fit.cn_3_mixedlat)
   
   
+}
+
+if (saveFig){
+  save.image(file = paste0(rootDir,"/cav_sinus_data.RData"))
 }
