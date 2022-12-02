@@ -41,7 +41,7 @@ library(stats)
 setwd("~/SharedCode/cavernous_sinus_code")
 rootDir = here()
 dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
-saveFig = TRUE
+saveFig = FALSE
 include_na_table = FALSE
 doOrdinal = FALSE
 doMixed = TRUE
@@ -324,12 +324,12 @@ for (i in 1:length(independent_vars)) {
   
 }
 
-interest_var = resexact_1
+interest_var = resexact_8
 for (i in 1:(length(independent_vars))) {
   print(independent_vars[[i]])
-  print((round(exp(interest_var[[i]]$coeffs),2)))
-  print((round(exp(interest_var[[i]]$coeffs.ci),2)))
-  print((round(interest_var[[i]]$p.values,2)))
+  print((round(exp(interest_var[[i]]$coeffs),3)))
+  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
+  print((round(interest_var[[i]]$p.values,3)))
   
 }
 
@@ -734,12 +734,12 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id), data=data_file_stats_long5,family=binomial)
   fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id), data=data_file_stats_long6,family=binomial)
   
- # fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
+  fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
 #  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
  # fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
 #  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
   
-  fit.cn_time_3 = glmer(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
+  fit.cn_time_3 = glmer(cn_3 ~ time_point + (time_point|id), data=data_file_stats_long3,family=binomial)
   emm_model_3 = emmeans(fit.cn_time_3, "time_point")
   pairs(emm_model_3, reverse = TRUE)
   
