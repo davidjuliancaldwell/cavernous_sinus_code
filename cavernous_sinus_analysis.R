@@ -38,9 +38,9 @@ library(DHARMa)
 library(elrm)
 library(stats)
 
-setwd("~/SharedCode/cavernous_sinus_code")
+setwd("~/code/cavernous_sinus_code")
 rootDir = here()
-dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
+dataDir = '/Users/davidcaldwell/OneDrive - UCSF/Research/UW_research/cav_sinus_total/cav_sinus_2022'
 saveFig = FALSE
 include_na_table = FALSE
 doOrdinal = FALSE
