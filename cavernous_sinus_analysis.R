@@ -37,10 +37,11 @@ library(AER)
 library(DHARMa)
 library(elrm)
 library(stats)
+library(ordinal)
 
-setwd("~/SharedCode/cavernous_sinus_code")
+setwd("~/code/cavernous_sinus_code")
 rootDir = here()
-dataDir = 'C:/Users/david/OneDrive - UW/Cavernous sinus project'
+dataDir = '/Users/davidcaldwell/OneDrive - UCSF/Research/UW_research/cav_sinus_total/cav_sinus_2022'
 saveFig = FALSE
 include_na_table = FALSE
 doOrdinal = FALSE
@@ -68,7 +69,7 @@ cat(column_names,sep="', '")
 data_file <- mutate_all(data_file,.funs=str_to_lower)
 
 if (include_na_table){
-data_file<-data_file %>% mutate(  across(everything(), ~replace_na(.x, "Missing")))
+data_file<-data_file %>% mutate(  across(everything() & where(is.character), ~replace_na(.x, "Missing")))
 } else {
   data_file<-data_file %>% mutate(  across(everything(), ~na_if(., "na")))
 }
@@ -164,8 +165,10 @@ if (saveFig){
 # linear mixed model to account for missing data
 
 
-data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "Missing")))
-data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "na")))
+data_file_stats<-data_file %>% mutate(  across(everything() & where(is.character), ~na_if(., "Missing")))
+data_file_stats<-data_file %>% mutate(  across(everything()& where(is.character), ~na_if(., "na")))
+data_file_stats<-data_file %>% mutate(  across(everything()& where(is.character), ~na_if(., "NA")))
+data_file_stats<-data_file %>% mutate(  across(everything()& where(is.numeric), ~na_if(., NA)))
 
 
 data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`,
@@ -324,18 +327,9 @@ for (i in 1:length(independent_vars)) {
   
 }
 
-interest_var = resexact_8
-for (i in 1:(length(independent_vars))) {
-  print(independent_vars[[i]])
-  print((round(exp(interest_var[[i]]$coeffs),3)))
-  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
-  print((round(interest_var[[i]]$p.values,3)))
-  
-}
 
 p1adjust <- p.adjust(p1nonadjust,"BH")
 p1total <- cbind(p1nonadjust,p1adjust)
-a
 
 
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
@@ -462,12 +456,6 @@ p4total <- cbind(p4nonadjust,p4adjust)
 
 fit.logit4 = glm(minor_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
 
-fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
-
-fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
-fit.multinom_cn_3 = multinom(imm_cn_3~surg_approach,data=data_file_stats)
-brant(fit.ordinal_cn_3)
-
 M1 <- logLik(fit.ordinal_cn_3)
 M2 <- logLik(fit.multinom_cn_3)
 (G <- -2*(M1[1] - M2[1]))
@@ -475,7 +463,6 @@ M2 <- logLik(fit.multinom_cn_3)
 pchisq(G,3,lower.tail = FALSE)
 
 # using epi in additional to surg_approach says rank deficient
-
 
 formula5 <- list(); model5 <- list(); p5nonadjust <- list()
 formula5_subsets <- list(); formula5_totals <- list();totals5 <- list(); subsets5<-list();data_frame5<- list();resexact_5<-list()
@@ -608,6 +595,16 @@ for (i in 1:length(independent_vars)) {
 }
 p8adjust <- p.adjust(p8nonadjust,"BH")
 p8total <- cbind(p8nonadjust,p8adjust)
+
+interest_var = resexact_1
+for (i in 1:(length(independent_vars))) {
+  print(independent_vars[[i]])
+  print((round(exp(interest_var[[i]]$coeffs),3)))
+  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
+  print((round(interest_var[[i]]$p.values,3)))
+  
+}
+
 # 
 # 
 # formula9 <- list(); model9 <- list(); p9nonadjust <- list()
@@ -663,6 +660,15 @@ p8total <- cbind(p8nonadjust,p8adjust)
 
 
 if (doOrdinal){
+  
+  
+  fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
+  
+  fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
+  fit.multinom_cn_3 = multinom(imm_cn_3~surg_approach,data=data_file_stats)
+  brant(fit.ordinal_cn_3)
+  
+  
 #fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
 fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
 
@@ -726,8 +732,25 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
                                                                                  grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
   )))
   
+  fit.cn_time_3_ord = clmm(cn_3 ~ time_point + (1|id), data=data_file_stats_long3)
+  fit.cn_time_4_ord = clmm(cn_4 ~ time_point + (1|id), data=data_file_stats_long4)
+  fit.cn_time_5_ord = clmm(cn_5 ~ time_point + (1|id), data=data_file_stats_long5)
+  fit.cn_time_6_ord = clmm(cn_6 ~ time_point + (1|id), data=data_file_stats_long6)
+  
+  emm_model_3_ord = emmeans(fit.cn_time_3_ord, "time_point")
+  pairs(emm_model_3_ord, reverse = TRUE)
+  
+  emm_model_4_ord = emmeans(fit.cn_time_4_ord, "time_point")
+  pairs(emm_model_4_ord, reverse = TRUE)
+  
+  emm_model_5_ord = emmeans(fit.cn_time_5_ord, "time_point")
+  pairs(emm_model_5_ord, reverse = TRUE)
+  
+  emm_model_6_ord = emmeans(fit.cn_time_6_ord, "time_point")
+  pairs(emm_model_6_ord, reverse = TRUE)
+  
   # set contrast options for unordered and ordered variables 
-  options(contrasts = rep ("contr.treatment", 2))
+  #options(contrasts = rep ("contr.treatment", 2)) - this was previously selected 
   
   fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
   fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id), data=data_file_stats_long4,family=binomial)
