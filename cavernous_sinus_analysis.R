@@ -506,7 +506,7 @@ for (i in 1:length(dependent_varsTime)) {
 for (i in 1:length(dependent_varsTime)) {
   
 print(subsetsTime[[i]])
-print(wilcoxResults[[i]])
+print(wilcoxResults[[i]]$p.value)
 
 }
 
