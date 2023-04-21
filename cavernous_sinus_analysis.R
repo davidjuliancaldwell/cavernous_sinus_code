@@ -39,6 +39,7 @@ library(elrm)
 library(stats)
 library(ordinal)
 library(rcompanion)
+library(exactRankTests)
 
 setwd("~/code/cavernous_sinus_code")
 rootDir = here()
@@ -276,22 +277,22 @@ if (doOrdinal){
                                                 po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=2,"3"=1)),
                                                 po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=2,"3"=1)),
                                                 imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=2,"3"=1)),
-                                                preop_3 = as.factor(recode(as.numeric(preop_3),"1"=2,"2"=1,"3"=1)),
-                                                preop_4 = as.factor(recode(as.numeric(preop_4),"1"=2,"2"=1,"3"=1)),
-                                                preop_5 = as.factor(recode(as.numeric(preop_5),"1"=2,"2"=1,"3"=1)),
-                                                preop_6 = as.factor(recode(as.numeric(preop_6),"1"=2,"2"=1,"3"=1)),
-                                                imm_cn_3_raw = as.factor(recode(as.numeric(imm_cn_3_raw),"1"=2,"2"=1,"3"=1)),
-                                                imm_cn_4_raw = as.factor(recode(as.numeric(imm_cn_4_raw),"1"=2,"2"=1,"3"=1)),
-                                                imm_cn_5_raw = as.factor(recode(as.numeric(imm_cn_5_raw),"1"=2,"2"=1,"3"=1)),
-                                                imm_cn_6_raw = as.factor(recode(as.numeric(imm_cn_6_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_6_3_months_cn_3_raw = as.factor(recode(as.numeric(po_6_3_months_cn_3_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_6_3_months_cn_4_raw = as.factor(recode(as.numeric(po_6_3_months_cn_4_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_6_3_months_cn_5_raw = as.factor(recode(as.numeric(po_6_3_months_cn_5_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_6_3_months_cn_6_raw = as.factor(recode(as.numeric(po_6_3_months_cn_6_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_1_cn_3_raw = as.factor(recode(as.numeric(po_1_cn_3_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_1_cn_4_raw = as.factor(recode(as.numeric(po_1_cn_4_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_1_cn_5_raw = as.factor(recode(as.numeric(po_1_cn_5_raw),"1"=2,"2"=1,"3"=1)),
-                                                po_1_cn_6_raw = as.factor(recode(as.numeric(po_1_cn_6_raw),"1"=2,"2"=1,"3"=1))
+                                                preop_3 = as.factor(recode(as.numeric(preop_3),"1"=3,"2"=2,"3"=1)),
+                                                preop_4 = as.factor(recode(as.numeric(preop_4),"1"=3,"2"=2,"3"=1)),
+                                                preop_5 = as.factor(recode(as.numeric(preop_5),"1"=3,"2"=2,"3"=1)),
+                                                preop_6 = as.factor(recode(as.numeric(preop_6),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_3_raw = as.factor(recode(as.numeric(imm_cn_3_raw),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_4_raw = as.factor(recode(as.numeric(imm_cn_4_raw),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_5_raw = as.factor(recode(as.numeric(imm_cn_5_raw),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_6_raw = as.factor(recode(as.numeric(imm_cn_6_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_3_raw = as.factor(recode(as.numeric(po_6_3_months_cn_3_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_4_raw = as.factor(recode(as.numeric(po_6_3_months_cn_4_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_5_raw = as.factor(recode(as.numeric(po_6_3_months_cn_5_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_6_raw = as.factor(recode(as.numeric(po_6_3_months_cn_6_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_3_raw = as.factor(recode(as.numeric(po_1_cn_3_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_4_raw = as.factor(recode(as.numeric(po_1_cn_4_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_5_raw = as.factor(recode(as.numeric(po_1_cn_5_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_6_raw = as.factor(recode(as.numeric(po_1_cn_6_raw),"1"=3,"2"=2,"3"=1))
                                                 
   )
   
@@ -316,6 +317,20 @@ independent_varsTime = set_names(independent_varsTime)
 
 dependent_varsTimeChange = set_names(dependent_varsTimeChange)
 independent_varsTimeChange = set_names(independent_varsTimeChange)
+
+# get subsets that have time values at all points to make sure its paired data 
+data_file_stats_subset_raw <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTime,independent_varsTime)))
+data_file_stats_subset_raw = data_file_stats_subset_raw[complete.cases(data_file_stats_subset_raw),]
+
+data_file_stats_subset <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTimeChange,independent_varsTimeChange)))
+data_file_stats_subset = data_file_stats_subset[complete.cases(data_file_stats_subset),]
+
+
+#identify all factor columns
+data_file_stats_subset_raw_numeric <-data_file_stats_subset_raw
+x <- sapply(data_file_stats_subset_raw, is.factor)
+
+data_file_stats_subset_raw_numeric[,x] = as.data.frame(apply(data_file_stats_subset_raw[ , x], 2, as.numeric))
 
 ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","resect_condense","post_treat_condense")])
 
@@ -344,6 +359,162 @@ if (saveFig){
 
 plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
 plot3
+
+#exact logistic regression for final table - trying to look at change - this didn't work
+formulaTimeChange <- list(); modelTimeChange <- list(); pTimeChangenonadjust <- list()
+formulaTimeChange_subsets <- list(); formulaTimeChange_totals <- list();totalsTimeChange <- list(); subsetsTimeChange<-list();data_frameTimeChange<- list();resexact_TimeChange<-list()
+for (i in 1:length(independent_varsTimeChange)) {
+  formulaTimeChange[[(2*i)-1]] = paste0(dependent_varsTimeChange[[(2*i)-1]], " ~ ", independent_varsTimeChange[[i]])
+  formulaTimeChange[[(2*i)]] = paste0(dependent_varsTimeChange[[(2*i)]], " ~ ", independent_varsTimeChange[[i]])
+  
+  modelTimeChange[[(2*i)-1]] = glm(formulaTimeChange[[(2*i)-1]],data=data_file_stats_subset,family="binomial")
+  modelTimeChange[[(2*i)]] = glm(formulaTimeChange[[(2*i)]],data=data_file_stats_subset,family="binomial")
+  
+  anova_temp <- Anova(modelTimeChange[[(2*i)-1]],type="II", test="Wald");
+  pTimeChangenonadjust[[(2*i)-1]] <- round(anova_temp[[3]],3)
+  
+  anova_temp <- Anova(modelTimeChange[[(2*i)]],type="II", test="Wald");
+  pTimeChangenonadjust[[(2*i)]] <- round(anova_temp[[3]],3)
+  
+  print(summary(modelTimeChange[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  formulaTimeChange_subsets[[(2*i)-1]] = paste0("~",dependent_varsTimeChange[[(2*i)-1]], " + ", independent_varsTimeChange[[i]])
+  formulaTimeChange_subsets[[(2*i)]] = paste0("~",dependent_varsTimeChange[[(2*i)]], " + ", independent_varsTimeChange[[i]])
+  
+  subsetsTimeChange[[(2*i)-1]] = xtabs(formulaTimeChange_subsets[[(2*i)-1]],data=data_file_stats_subset)
+  subsetsTimeChange[[(2*i)]] = xtabs(formulaTimeChange_subsets[[(2*i)]],data=data_file_stats_subset)
+  
+  totalsTimeChange[[(2*i)-1]]  = subsetsTimeChange[[(2*i)-1]][1,]+subsetsTimeChange[[(2*i)-1]][2,]
+  totalsTimeChange[[(2*i)]]  = subsetsTimeChange[[(2*i)]][1,]+subsetsTimeChange[[(2*i)]][2,]
+  
+  data_frameTimeChange[[(2*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)-1]])[,2]),depvar=subsetsTimeChange[[(2*i)-1]][2,],n=totalsTimeChange[[(2*i)-1]])
+  data_frameTimeChange[[(2*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)]])[,2]),depvar=subsetsTimeChange[[(2*i)]][2,],n=totalsTimeChange[[(2*i)]])
+  
+}
+# 
+# for (i in 1:length(dependent_varsTime)) {
+#   if (i<length(dependent_varsTime)){
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000, 
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   else {
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000, 
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   summary(resexact_Time[[i]])
+# }
+
+timeChangeExact = list()
+
+for (i in 1:length(dependent_varsTimeChange)) {
+  timeChangeExact[[i]] = nominalSymmetryTest(subsetsTimeChange[[i]], method = "exact")
+  
+  print(subsetsTimeChange[[i]])
+  print(timeChangeExact[[i]]$Global.test.for.symmetry)
+}
+
+# exact logistic regression for final table - trying to look at compared to baseline 
+formulaTime <- list(); modelTime <- list(); pTimenonadjust <- list()
+formulaTime_subsets <- list(); formulaTime_totals <- list();totalsTime <- list(); subsetsTime<-list();data_frameTime<- list();resexact_Time<-list()
+wilcoxResults <- list();
+for (i in 1:length(independent_varsTime)) {
+  formulaTime[[(3*i)-2]] = paste0(dependent_varsTime[[(3*i)-2]], " ~ ", independent_varsTime[[i]])
+  formulaTime[[(3*i)-1]] = paste0(dependent_varsTime[[(3*i)-1]], " ~ ", independent_varsTime[[i]])
+  formulaTime[[(3*i)]] = paste0(dependent_varsTime[[(3*i)]], " ~ ", independent_varsTime[[i]])
+  
+  #modelTime[[(3*i)-2]] = glm(formulaTime[[(3*i)-2]],data=data_file_stats,family="binomial") 
+  #modelTime[[(3*i)-1]] = glm(formulaTime[[(3*i)-1]],data=data_file_stats,family="binomial") 
+  #modelTime[[(3*i)]] = glm(formulaTime[[(3*i)]],data=data_file_stats,family="binomial") 
+  
+  #anova_temp <- Anova(modelTime[[(3*i)-2]],type="II", test="Wald");
+  #pTimenonadjust[[(3*i)-2]] <- round(anova_temp[[3]],3)
+  
+  #anova_temp <- Anova(modelTime[[(3*i)-1]],type="II", test="Wald");
+  #pTimenonadjust[[(3*i)-1]] <- round(anova_temp[[3]],3)
+  
+  #anova_temp <- Anova(modelTime[[(3*i)]],type="II", test="Wald");
+  #pTimenonadjust[[(3*i)]] <- round(anova_temp[[3]],3)
+  
+  #print(summary(modelTime[[i]]))
+  #print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  formulaTime_subsets[[(3*i)-2]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)-2]])
+  formulaTime_subsets[[(3*i)-1]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)-1]])
+  formulaTime_subsets[[(3*i)]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)]])
+  
+  subsetsTime[[(3*i)-2]] = xtabs(formulaTime_subsets[[(3*i)-2]],data=data_file_stats_subset_raw)
+  subsetsTime[[(3*i)-1]] = xtabs(formulaTime_subsets[[(3*i)-1]],data=data_file_stats_subset_raw)
+  subsetsTime[[(3*i)]] = xtabs(formulaTime_subsets[[(3*i)]],data=data_file_stats_subset_raw)
+  
+  totalsTime[[(3*i)-2]]  = subsetsTime[[(3*i)-2]][1,]+subsetsTime[[(3*i)-2]][2,]
+  totalsTime[[(3*i)-1]]  = subsetsTime[[(3*i)-1]][1,]+subsetsTime[[(3*i)-1]][2,]
+  totalsTime[[(3*i)]]  = subsetsTime[[(3*i)]][1,]+subsetsTime[[(3*i)]][2,]
+  
+  data_frameTime[[(3*i)-2]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-2]])[,2]),depvar=subsetsTime[[(3*i)-2]][2,],n=totalsTime[[(3*i)-2]])
+  data_frameTime[[(3*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-1]])[,2]),depvar=subsetsTime[[(3*i)-1]][2,],n=totalsTime[[(3*i)-1]])
+  data_frameTime[[(3*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)]])[,2]),depvar=subsetsTime[[(3*i)]][2,],n=totalsTime[[(3*i)]])
+
+  
+  wilcoxResults[[(3*i)-2]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)-2]]]],
+               paired = TRUE,
+               exact = TRUE,
+               conf.int = TRUE,
+               conf.level = 0.95)
+  
+  wilcoxResults[[(3*i)-1]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)-1]]]],
+                                          paired = TRUE,
+                                          exact = TRUE,
+                                          conf.int = TRUE,
+                                          conf.level = 0.95)
+  
+  wilcoxResults[[(3*i)]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)]]]],
+                                          paired = TRUE,
+                                          exact = TRUE,
+                                          conf.int = TRUE,
+                                          conf.level = 0.95)
+  
+  
+  
+}
+
+# for (i in 1:length(dependent_varsTime)) {
+#   if (i<length(dependent_varsTime)){
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000,
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   else {
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000,
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   summary(resexact_Time[[i]])
+# }
+
+timeExact = list()
+effectSizeExact = list()
+for (i in 1:length(dependent_varsTime)) {
+  timeExact[[i]] = nominalSymmetryTest(subsetsTime[[i]], exact=TRUE)
+  effectSizeExact[[i]] = cohenG(subsetsTime[[i]])
+  print(effectSizeExact[[i]])
+  print(timeExact[[i]]$Pairwise.symmetry.tests)
+}
+
+for (i in 1:length(dependent_varsTime)) {
+  
+print(subsetsTime[[i]])
+print(wilcoxResults[[i]])
+
+}
+
+# wilcoxon tests 
+
+#wilcoxonPairedRC(x = Data$Likert,
+ #                g = Data$Time)
+
 
 formula1 <- list(); model1 <- list(); p1nonadjust <- list()
 formula1_subsets <- list(); formula1_totals <- list();totals1 <- list(); subsets1<-list();data_frame1<- list();resexact_1<-list()
@@ -504,11 +675,11 @@ p4total <- cbind(p4nonadjust,p4adjust)
 
 fit.logit4 = glm(minor_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
 
-M1 <- logLik(fit.ordinal_cn_3)
-M2 <- logLik(fit.multinom_cn_3)
-(G <- -2*(M1[1] - M2[1]))
+#M1 <- logLik(fit.ordinal_cn_3)
+#M2 <- logLik(fit.multinom_cn_3)
+#(G <- -2*(M1[1] - M2[1]))
 # degree of freedoM
-pchisq(G,3,lower.tail = FALSE)
+#pchisq(G,3,lower.tail = FALSE)
 
 # using epi in additional to surg_approach says rank deficient
 
@@ -644,115 +815,8 @@ for (i in 1:length(independent_vars)) {
 p8adjust <- p.adjust(p8nonadjust,"BH")
 p8total <- cbind(p8nonadjust,p8adjust)
 
-# exact logistic regression for final table - trying to look at compared to baseline 
-formulaTime <- list(); modelTime <- list(); pTimenonadjust <- list()
-formulaTime_subsets <- list(); formulaTime_totals <- list();totalsTime <- list(); subsetsTime<-list();data_frameTime<- list();resexact_Time<-list()
-for (i in 1:length(independent_varsTime)) {
-  formulaTime[[(3*i)-2]] = paste0(dependent_varsTime[[(3*i)-2]], " ~ ", independent_varsTime[[i]])
-  formulaTime[[(3*i)-1]] = paste0(dependent_varsTime[[(3*i)-1]], " ~ ", independent_varsTime[[i]])
-  formulaTime[[(3*i)]] = paste0(dependent_varsTime[[(3*i)]], " ~ ", independent_varsTime[[i]])
 
-  #modelTime[[(3*i)-2]] = glm(formulaTime[[(3*i)-2]],data=data_file_stats,family="binomial") 
-  #modelTime[[(3*i)-1]] = glm(formulaTime[[(3*i)-1]],data=data_file_stats,family="binomial") 
-  #modelTime[[(3*i)]] = glm(formulaTime[[(3*i)]],data=data_file_stats,family="binomial") 
-  
-  #anova_temp <- Anova(modelTime[[(3*i)-2]],type="II", test="Wald");
-  #pTimenonadjust[[(3*i)-2]] <- round(anova_temp[[3]],3)
-  
-  #anova_temp <- Anova(modelTime[[(3*i)-1]],type="II", test="Wald");
-  #pTimenonadjust[[(3*i)-1]] <- round(anova_temp[[3]],3)
-  
-  #anova_temp <- Anova(modelTime[[(3*i)]],type="II", test="Wald");
-  #pTimenonadjust[[(3*i)]] <- round(anova_temp[[3]],3)
-  
-  #print(summary(modelTime[[i]]))
-  #print(anova_temp)
-  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-  
-  formulaTime_subsets[[(3*i)-2]] = paste0("~",dependent_varsTime[[(3*i)-2]], " + ", independent_varsTime[[i]])
-  formulaTime_subsets[[(3*i)-1]] = paste0("~",dependent_varsTime[[(3*i)-1]], " + ", independent_varsTime[[i]])
-  formulaTime_subsets[[(3*i)]] = paste0("~",dependent_varsTime[[(3*i)]], " + ", independent_varsTime[[i]])
-  
-  subsetsTime[[(3*i)-2]] = xtabs(formulaTime_subsets[[(3*i)-2]],data=data_file_stats)
-  subsetsTime[[(3*i)-1]] = xtabs(formulaTime_subsets[[(3*i)-1]],data=data_file_stats)
-  subsetsTime[[(3*i)]] = xtabs(formulaTime_subsets[[(3*i)]],data=data_file_stats)
 
-  totalsTime[[(3*i)-2]]  = subsetsTime[[(3*i)-2]][1,]+subsetsTime[[(3*i)-2]][2,]
-  totalsTime[[(3*i)-1]]  = subsetsTime[[(3*i)-1]][1,]+subsetsTime[[(3*i)-1]][2,]
-  totalsTime[[(3*i)]]  = subsetsTime[[(3*i)]][1,]+subsetsTime[[(3*i)]][2,]
-  
-  data_frameTime[[(3*i)-2]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-2]])[,2]),depvar=subsetsTime[[(3*i)-2]][2,],n=totalsTime[[(3*i)-2]])
-  data_frameTime[[(3*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-1]])[,2]),depvar=subsetsTime[[(3*i)-1]][2,],n=totalsTime[[(3*i)-1]])
-  data_frameTime[[(3*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)]])[,2]),depvar=subsetsTime[[(3*i)]][2,],n=totalsTime[[(3*i)]])
-  
-}
-
-for (i in 1:length(dependent_varsTime)) {
-  if (i<length(dependent_varsTime)){
-    resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000,
-                              burnIn=10000, data=data_frameTime[[i]], r=2)
-  }
-  else {
-    resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000,
-                              burnIn=10000, data=data_frameTime[[i]], r=2)
-  }
-  summary(resexact_Time[[i]])
-}
-
-#exact logistic regression for final table - trying to look at change - this didn't work
-formulaTimeChange <- list(); modelTimeChange <- list(); pTimeChangenonadjust <- list()
-formulaTimeChange_subsets <- list(); formulaTimeChange_totals <- list();totalsTimeChange <- list(); subsetsTimeChange<-list();data_frameTimeChange<- list();resexact_TimeChange<-list()
-for (i in 1:length(independent_varsTimeChange)) {
-  formulaTimeChange[[(2*i)-1]] = paste0(dependent_varsTimeChange[[(2*i)-1]], " ~ ", independent_varsTimeChange[[i]])
-  formulaTimeChange[[(2*i)]] = paste0(dependent_varsTimeChange[[(2*i)]], " ~ ", independent_varsTimeChange[[i]])
-
-  modelTimeChange[[(2*i)-1]] = glm(formulaTimeChange[[(2*i)-1]],data=data_file_stats,family="binomial")
-  modelTimeChange[[(2*i)]] = glm(formulaTimeChange[[(2*i)]],data=data_file_stats,family="binomial")
-
-  anova_temp <- Anova(modelTimeChange[[(2*i)-1]],type="II", test="Wald");
-  pTimeChangenonadjust[[(2*i)-1]] <- round(anova_temp[[3]],3)
-
-  anova_temp <- Anova(modelTimeChange[[(2*i)]],type="II", test="Wald");
-  pTimeChangenonadjust[[(2*i)]] <- round(anova_temp[[3]],3)
-
-  print(summary(modelTimeChange[[i]]))
-  print(anova_temp)
-  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-
-  formulaTimeChange_subsets[[(2*i)-1]] = paste0("~",dependent_varsTimeChange[[(2*i)-1]], " + ", independent_varsTimeChange[[i]])
-  formulaTimeChange_subsets[[(2*i)]] = paste0("~",dependent_varsTimeChange[[(2*i)]], " + ", independent_varsTimeChange[[i]])
-
-  subsetsTimeChange[[(2*i)-1]] = xtabs(formulaTimeChange_subsets[[(2*i)-1]],data=data_file_stats)
-  subsetsTimeChange[[(2*i)]] = xtabs(formulaTimeChange_subsets[[(2*i)]],data=data_file_stats)
-
-  totalsTimeChange[[(2*i)-1]]  = subsetsTimeChange[[(2*i)-1]][1,]+subsetsTimeChange[[(2*i)-1]][2,]
-  totalsTimeChange[[(2*i)]]  = subsetsTimeChange[[(2*i)]][1,]+subsetsTimeChange[[(2*i)]][2,]
-
-  data_frameTimeChange[[(2*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)-1]])[,2]),depvar=subsetsTimeChange[[(2*i)-1]][2,],n=totalsTimeChange[[(2*i)-1]])
-  data_frameTimeChange[[(2*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)]])[,2]),depvar=subsetsTimeChange[[(2*i)]][2,],n=totalsTimeChange[[(2*i)]])
-
-}
-# 
-# for (i in 1:length(dependent_varsTime)) {
-#   if (i<length(dependent_varsTime)){
-#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000, 
-#                               burnIn=10000, data=data_frameTime[[i]], r=2)
-#   }
-#   else {
-#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000, 
-#                               burnIn=10000, data=data_frameTime[[i]], r=2)
-#   }
-#   summary(resexact_Time[[i]])
-# }
-
-timeChangeExact = list()
-for (i in 1:length(dependent_varsTimeChange)) {
-  timeChangeExact[[i]] = nominalSymmetryTest(subsetsTimeChange[[i]], method = "exact")
-  
-  summary(timeChangeExact[[i]])
-}
 
 interest_var = resexact_1
 for (i in 1:(length(independent_vars))) {
