@@ -37,6 +37,9 @@ library(AER)
 library(DHARMa)
 library(elrm)
 library(stats)
+library(ordinal)
+library(rcompanion)
+library(exactRankTests)
 
 setwd("~/code/cavernous_sinus_code")
 rootDir = here()
@@ -44,7 +47,8 @@ dataDir = '/Users/davidcaldwell/OneDrive - UCSF/Research/UW_research/cav_sinus_t
 saveFig = FALSE
 include_na_table = FALSE
 doOrdinal = FALSE
-doMixed = TRUE
+doMixed = FALSE
+doMixedRank = TRUE
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -68,7 +72,7 @@ cat(column_names,sep="', '")
 data_file <- mutate_all(data_file,.funs=str_to_lower)
 
 if (include_na_table){
-data_file<-data_file %>% mutate(  across(everything(), ~replace_na(.x, "Missing")))
+  data_file<-data_file %>% mutate(  across(everything() & where(is.character), ~replace_na(.x, "Missing")))
 } else {
   data_file<-data_file %>% mutate(  across(everything(), ~na_if(., "na")))
 }
@@ -86,12 +90,12 @@ data_file <- data_file %>% mutate(`Age at the time of surgery`=as.numeric(`Age a
                                   `Length of follow-up (months)` = as.numeric(as.character(`Length of follow-up (months)`)),
                                   `Length of ICU Stay (Days)` = as.numeric(as.character(`Length of ICU Stay (Days)`)),
                                   `Overall length of stay (days)` = as.numeric(as.character(`Overall length of stay (days)`))
-#                                  `Surgery_DateTime`=as.Date(`Surgery_DateTime`,origin = "1899-12-30")
-                                  )
+                                  #                                  `Surgery_DateTime`=as.Date(`Surgery_DateTime`,origin = "1899-12-30")
+)
 
 data_file <- data_file %>% mutate(across(c(`Tumor only in cavernous sinus (Y=1, 2 = N, NA = NA)`,
                                            `Tumor epicenter (1 = cavernous sinus, 2 = MF 3 = PF 4 = ITF 5 = sella 6 = sphenoid sinus 7 = orbital apex`),
-                                  factor))
+                                         factor))
 
 
 
@@ -111,22 +115,22 @@ if (saveFig){
                                                     missing = "no") 
     #missing_text = "(Missing)")  
     
-  data_summary_total %>%
-    as_gt() %>%             # convert to gt table
-    gt::gtsave(             # save table as image
-      filename = "total_summary.png"
-    )
-  
-  data_summary_total %>%
-    as_gt() %>%             # convert to gt table
-    gt::gtsave(             # save table as Html
-      filename = "total_summary.html"
-    )
-  
-  data_summary_total_flex <- data_summary_total %>% as_flex_table() 
-  data_summary_total_flex <- fontsize(data_summary_total_flex,size=fontSize)
-  
-  save_as_docx(data_summary_total_flex,path="total_summary.docx",pr_section = sect_properties)
+    data_summary_total %>%
+      as_gt() %>%             # convert to gt table
+      gt::gtsave(             # save table as image
+        filename = "total_summary.png"
+      )
+    
+    data_summary_total %>%
+      as_gt() %>%             # convert to gt table
+      gt::gtsave(             # save table as Html
+        filename = "total_summary.html"
+      )
+    
+    data_summary_total_flex <- data_summary_total %>% as_flex_table() 
+    data_summary_total_flex <- fontsize(data_summary_total_flex,size=fontSize)
+    
+    save_as_docx(data_summary_total_flex,path="total_summary.docx",pr_section = sect_properties)
   }
   else{
     ### do everything
@@ -154,7 +158,7 @@ if (saveFig){
     save_as_docx(data_summary_total_flex,path="total_summary_no_na.docx",pr_section = sect_properties)
     
   }
-  }
+}
 
 
 
@@ -164,8 +168,10 @@ if (saveFig){
 # linear mixed model to account for missing data
 
 
-data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "Missing")))
-data_file_stats<-data_file %>% mutate(  across(everything(), ~na_if(., "na")))
+data_file_stats<-data_file %>% mutate(  across(everything() & where(is.character), ~na_if(., "Missing")))
+data_file_stats<-data_file %>% mutate(  across(everything()& where(is.character), ~na_if(., "na")))
+data_file_stats<-data_file %>% mutate(  across(everything()& where(is.character), ~na_if(., "NA")))
+data_file_stats<-data_file %>% mutate(  across(everything()& where(is.numeric), ~na_if(., NA)))
 
 
 data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`,
@@ -201,8 +207,25 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               imm_cn_5 = `Immediate PO CN 5 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_1_cn_6 = `PO 1 year (or last follow up) CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
                                               po_6_3_months_cn_6 = `PO 6 weeks-3 months CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
-                                              imm_cn_6 = `Immediate PO CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`
-                                              )
+                                              imm_cn_6 = `Immediate PO CN 6 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
+                                              preop_3 = `Pre-op CN 3 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              preop_4 = `Pre-op CN 4 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              preop_5 = `Pre-op CN 5 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              preop_6 = `Pre-op CN 6 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              imm_cn_3_raw = `Immediate PO CN 3 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              imm_cn_4_raw = `Immediate PO CN 4 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              imm_cn_5_raw = `Immediate PO CN 5 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              imm_cn_6_raw = `Immediate PO CN 6 Function (1 = Normal 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_3_raw = `Post-op 6 weeks-3 months  CN 3 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_4_raw = `Post-op 6 weeks-3 months  CN 4 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_5_raw = `Post-op 6 weeks-3 months  CN 5 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_6_3_months_cn_6_raw = `Post-op 6 weeks-3 months  CN 6 Function (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_1_cn_3_raw = `PO 1 year (or last follow up) CN 3 function  (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_1_cn_4_raw = `PO 1 year (or last follow up) CN 4 function  (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_1_cn_5_raw = `PO 1 year (or last follow up) CN 5 function  (1= Normal, 2 = Partial deficit 3 = Complete deficit)`,
+                                              po_1_cn_6_raw = `PO 1 year (or last follow up) CN 6 function  (1= Normal, 2 = Partial deficit 3 = Complete deficit)`
+                                              
+)
 
 
 # recode no's to yes's
@@ -211,30 +234,32 @@ data_file_stats <- data_file_stats %>% mutate(prev_rad = as.factor(recode(prev_r
                                               prev_surg = as.factor(recode(prev_surg,"1"=2,"2"=1)),
                                               lat = as.factor(recode(lat,"1"=2,"2"=1)),
                                               sup = as.factor(recode(sup,"1"=2,"2"=1)),
-                                              post = as.factor(recode(post,"1"=2,"2"=1))
-                                                              )
+                                              post = as.factor(recode(post,"1"=2,"2"=1)),
+                                              age = age/10
+)
 
 
+# here is where we either make the outcome binary or keep it in three categories for cranial nerve function over time 
 if (doOrdinal){
-data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0)),
-                                              post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
-                                              surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
-                                              epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
-                                              path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
-                                              po_1_cn_3 = as.factor(recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1)),
-                                              po_6_3_months_cn_3 = as.factor(recode(as.numeric(po_6_3_months_cn_3),"1" = 2, "2"=3,"3"=1)),
-                                              imm_cn_3 = as.factor(recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1)),
-                                              po_6_3_months_cn_4 = as.factor(recode(as.numeric(po_6_3_months_cn_4),"1" = 2, "2"=3,"3"=1)),
-                                              po_1_cn_4 = as.factor(recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1)),
-                                              imm_cn_4 = as.factor(recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1)),
-                                              po_6_3_months_cn_5 = as.factor(recode(as.numeric(po_6_3_months_cn_5),"1" = 2, "2"=3,"3"=1)),
-                                              po_1_cn_5 = as.factor(recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1)),
-                                              imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1)),
-                                              po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=3,"3"=1)),
-                                              po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1)),
-                                              imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1))
-                                              )
-
+  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0)),
+                                                post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
+                                                surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
+                                                epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
+                                                path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
+                                                po_1_cn_3 = as.factor(recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                                po_6_3_months_cn_3 = as.factor(recode(as.numeric(po_6_3_months_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                                imm_cn_3 = as.factor(recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1)),
+                                                po_6_3_months_cn_4 = as.factor(recode(as.numeric(po_6_3_months_cn_4),"1" = 2, "2"=3,"3"=1)),
+                                                po_1_cn_4 = as.factor(recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1)),
+                                                imm_cn_4 = as.factor(recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1)),
+                                                po_6_3_months_cn_5 = as.factor(recode(as.numeric(po_6_3_months_cn_5),"1" = 2, "2"=3,"3"=1)),
+                                                po_1_cn_5 = as.factor(recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1)),
+                                                imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1)),
+                                                po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=3,"3"=1)),
+                                                po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1)),
+                                                imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1))
+  )
+  
 } else{
   data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0)),
                                                 post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
@@ -252,20 +277,63 @@ data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode
                                                 imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=2,"3"=1)),
                                                 po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=2,"3"=1)),
                                                 po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=2,"3"=1)),
-                                                imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=2,"3"=1))
+                                                imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=2,"3"=1)),
+                                                preop_3 = as.factor(recode(as.numeric(preop_3),"1"=3,"2"=2,"3"=1)),
+                                                preop_4 = as.factor(recode(as.numeric(preop_4),"1"=3,"2"=2,"3"=1)),
+                                                preop_5 = as.factor(recode(as.numeric(preop_5),"1"=3,"2"=2,"3"=1)),
+                                                preop_6 = as.factor(recode(as.numeric(preop_6),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_3_raw = as.factor(recode(as.numeric(imm_cn_3_raw),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_4_raw = as.factor(recode(as.numeric(imm_cn_4_raw),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_5_raw = as.factor(recode(as.numeric(imm_cn_5_raw),"1"=3,"2"=2,"3"=1)),
+                                                imm_cn_6_raw = as.factor(recode(as.numeric(imm_cn_6_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_3_raw = as.factor(recode(as.numeric(po_6_3_months_cn_3_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_4_raw = as.factor(recode(as.numeric(po_6_3_months_cn_4_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_5_raw = as.factor(recode(as.numeric(po_6_3_months_cn_5_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_6_3_months_cn_6_raw = as.factor(recode(as.numeric(po_6_3_months_cn_6_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_3_raw = as.factor(recode(as.numeric(po_1_cn_3_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_4_raw = as.factor(recode(as.numeric(po_1_cn_4_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_5_raw = as.factor(recode(as.numeric(po_1_cn_5_raw),"1"=3,"2"=2,"3"=1)),
+                                                po_1_cn_6_raw = as.factor(recode(as.numeric(po_1_cn_6_raw),"1"=3,"2"=2,"3"=1))
+                                                
   )
   
 }
 dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","po_6_3_months_cn_3","imm_cn_4","po_1_cn_4","po_6_3_months_cn_4","imm_cn_5","po_1_cn_5","po_6_3_months_cn_5","imm_cn_6","po_1_cn_6","po_6_3_months_cn_6")
-independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","age","lat","sup","post")
+#independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","age","lat","sup","post")
 independent_vars = c("surg_approach_condense","epi_condense","path_condense","prev_rad","prev_surg","lat","sup","post","age")
 
+dependent_varsTime = c("imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")
+independent_varsTime = c("preop_3","preop_4","preop_5","preop_6")
+
+
+# this was for trying exact logistic with comparison via change to immediate postop, didnt work 
+dependent_varsTimeChange = c("po_6_3_months_cn_3","po_1_cn_3","po_6_3_months_cn_4","po_1_cn_4","po_6_3_months_cn_5","po_1_cn_5","po_6_3_months_cn_6","po_1_cn_6")
+independent_varsTimeChange = c("imm_cn_3","imm_cn_4","imm_cn_5","imm_cn_6")
 
 dependent_vars = set_names(dependent_vars)
 independent_vars = set_names(independent_vars)
 
-ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","resect_condense","post_treat_condense")])
+dependent_varsTime = set_names(dependent_varsTime)
+independent_varsTime = set_names(independent_varsTime)
 
+dependent_varsTimeChange = set_names(dependent_varsTimeChange)
+independent_varsTimeChange = set_names(independent_varsTimeChange)
+
+# get subsets that have time values at all points to make sure its paired data 
+data_file_stats_subset_raw <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTime,independent_varsTime)))
+data_file_stats_subset_raw = data_file_stats_subset_raw[complete.cases(data_file_stats_subset_raw),]
+
+data_file_stats_subset <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTimeChange,independent_varsTimeChange)))
+data_file_stats_subset = data_file_stats_subset[complete.cases(data_file_stats_subset),]
+
+
+#identify all factor columns
+data_file_stats_subset_raw_numeric <-data_file_stats_subset_raw
+x <- sapply(data_file_stats_subset_raw, is.factor)
+
+data_file_stats_subset_raw_numeric[,x] = as.data.frame(apply(data_file_stats_subset_raw[ , x], 2, as.numeric))
+
+ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","resect_condense","post_treat_condense")])
 
 ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","po_1_cn_3","po_1_cn_4","po_1_cn_5","po_1_cn_6")])
 
@@ -286,12 +354,168 @@ all_plots2 = map(dependent_vars,function(dependent_vars){
 plotnames = imap(all_plots2,~paste0("cav_sinus_",.y,"_",names(.x),".png")) %>% flatten()
 
 if (saveFig){
-walk2(plotnames, flatten(all_plots2), ~ggsave(filename = .x, plot = .y, 
-                                             height = 7, width = 7))
+  walk2(plotnames, flatten(all_plots2), ~ggsave(filename = .x, plot = .y, 
+                                                height = 7, width = 7))
 }
 
 plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
 plot3
+
+#exact logistic regression for final table - trying to look at change - this didn't work
+formulaTimeChange <- list(); modelTimeChange <- list(); pTimeChangenonadjust <- list()
+formulaTimeChange_subsets <- list(); formulaTimeChange_totals <- list();totalsTimeChange <- list(); subsetsTimeChange<-list();data_frameTimeChange<- list();resexact_TimeChange<-list()
+for (i in 1:length(independent_varsTimeChange)) {
+  formulaTimeChange[[(2*i)-1]] = paste0(dependent_varsTimeChange[[(2*i)-1]], " ~ ", independent_varsTimeChange[[i]])
+  formulaTimeChange[[(2*i)]] = paste0(dependent_varsTimeChange[[(2*i)]], " ~ ", independent_varsTimeChange[[i]])
+  
+  modelTimeChange[[(2*i)-1]] = glm(formulaTimeChange[[(2*i)-1]],data=data_file_stats_subset,family="binomial")
+  modelTimeChange[[(2*i)]] = glm(formulaTimeChange[[(2*i)]],data=data_file_stats_subset,family="binomial")
+  
+  anova_temp <- Anova(modelTimeChange[[(2*i)-1]],type="II", test="Wald");
+  pTimeChangenonadjust[[(2*i)-1]] <- round(anova_temp[[3]],3)
+  
+  anova_temp <- Anova(modelTimeChange[[(2*i)]],type="II", test="Wald");
+  pTimeChangenonadjust[[(2*i)]] <- round(anova_temp[[3]],3)
+  
+  print(summary(modelTimeChange[[i]]))
+  print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  formulaTimeChange_subsets[[(2*i)-1]] = paste0("~",dependent_varsTimeChange[[(2*i)-1]], " + ", independent_varsTimeChange[[i]])
+  formulaTimeChange_subsets[[(2*i)]] = paste0("~",dependent_varsTimeChange[[(2*i)]], " + ", independent_varsTimeChange[[i]])
+  
+  subsetsTimeChange[[(2*i)-1]] = xtabs(formulaTimeChange_subsets[[(2*i)-1]],data=data_file_stats_subset)
+  subsetsTimeChange[[(2*i)]] = xtabs(formulaTimeChange_subsets[[(2*i)]],data=data_file_stats_subset)
+  
+  totalsTimeChange[[(2*i)-1]]  = subsetsTimeChange[[(2*i)-1]][1,]+subsetsTimeChange[[(2*i)-1]][2,]
+  totalsTimeChange[[(2*i)]]  = subsetsTimeChange[[(2*i)]][1,]+subsetsTimeChange[[(2*i)]][2,]
+  
+  data_frameTimeChange[[(2*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)-1]])[,2]),depvar=subsetsTimeChange[[(2*i)-1]][2,],n=totalsTimeChange[[(2*i)-1]])
+  data_frameTimeChange[[(2*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)]])[,2]),depvar=subsetsTimeChange[[(2*i)]][2,],n=totalsTimeChange[[(2*i)]])
+  
+}
+# 
+# for (i in 1:length(dependent_varsTime)) {
+#   if (i<length(dependent_varsTime)){
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000, 
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   else {
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000, 
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   summary(resexact_Time[[i]])
+# }
+
+timeChangeExact = list()
+
+for (i in 1:length(dependent_varsTimeChange)) {
+  timeChangeExact[[i]] = nominalSymmetryTest(subsetsTimeChange[[i]], method = "exact")
+  
+  print(subsetsTimeChange[[i]])
+  print(timeChangeExact[[i]]$Global.test.for.symmetry)
+}
+
+# exact logistic regression for final table - trying to look at compared to baseline 
+formulaTime <- list(); modelTime <- list(); pTimenonadjust <- list()
+formulaTime_subsets <- list(); formulaTime_totals <- list();totalsTime <- list(); subsetsTime<-list();data_frameTime<- list();resexact_Time<-list()
+wilcoxResults <- list();
+for (i in 1:length(independent_varsTime)) {
+  formulaTime[[(3*i)-2]] = paste0(dependent_varsTime[[(3*i)-2]], " ~ ", independent_varsTime[[i]])
+  formulaTime[[(3*i)-1]] = paste0(dependent_varsTime[[(3*i)-1]], " ~ ", independent_varsTime[[i]])
+  formulaTime[[(3*i)]] = paste0(dependent_varsTime[[(3*i)]], " ~ ", independent_varsTime[[i]])
+  
+  #modelTime[[(3*i)-2]] = glm(formulaTime[[(3*i)-2]],data=data_file_stats,family="binomial") 
+  #modelTime[[(3*i)-1]] = glm(formulaTime[[(3*i)-1]],data=data_file_stats,family="binomial") 
+  #modelTime[[(3*i)]] = glm(formulaTime[[(3*i)]],data=data_file_stats,family="binomial") 
+  
+  #anova_temp <- Anova(modelTime[[(3*i)-2]],type="II", test="Wald");
+  #pTimenonadjust[[(3*i)-2]] <- round(anova_temp[[3]],3)
+  
+  #anova_temp <- Anova(modelTime[[(3*i)-1]],type="II", test="Wald");
+  #pTimenonadjust[[(3*i)-1]] <- round(anova_temp[[3]],3)
+  
+  #anova_temp <- Anova(modelTime[[(3*i)]],type="II", test="Wald");
+  #pTimenonadjust[[(3*i)]] <- round(anova_temp[[3]],3)
+  
+  #print(summary(modelTime[[i]]))
+  #print(anova_temp)
+  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
+  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
+  
+  formulaTime_subsets[[(3*i)-2]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)-2]])
+  formulaTime_subsets[[(3*i)-1]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)-1]])
+  formulaTime_subsets[[(3*i)]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)]])
+  
+  subsetsTime[[(3*i)-2]] = xtabs(formulaTime_subsets[[(3*i)-2]],data=data_file_stats_subset_raw)
+  subsetsTime[[(3*i)-1]] = xtabs(formulaTime_subsets[[(3*i)-1]],data=data_file_stats_subset_raw)
+  subsetsTime[[(3*i)]] = xtabs(formulaTime_subsets[[(3*i)]],data=data_file_stats_subset_raw)
+  
+  totalsTime[[(3*i)-2]]  = subsetsTime[[(3*i)-2]][1,]+subsetsTime[[(3*i)-2]][2,]
+  totalsTime[[(3*i)-1]]  = subsetsTime[[(3*i)-1]][1,]+subsetsTime[[(3*i)-1]][2,]
+  totalsTime[[(3*i)]]  = subsetsTime[[(3*i)]][1,]+subsetsTime[[(3*i)]][2,]
+  
+  data_frameTime[[(3*i)-2]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-2]])[,2]),depvar=subsetsTime[[(3*i)-2]][2,],n=totalsTime[[(3*i)-2]])
+  data_frameTime[[(3*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-1]])[,2]),depvar=subsetsTime[[(3*i)-1]][2,],n=totalsTime[[(3*i)-1]])
+  data_frameTime[[(3*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)]])[,2]),depvar=subsetsTime[[(3*i)]][2,],n=totalsTime[[(3*i)]])
+  
+  
+  wilcoxResults[[(3*i)-2]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)-2]]]],
+                                          paired = TRUE,
+                                          exact = TRUE,
+                                          conf.int = TRUE,
+                                          conf.level = 0.95)
+  
+  wilcoxResults[[(3*i)-1]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)-1]]]],
+                                          paired = TRUE,
+                                          exact = TRUE,
+                                          conf.int = TRUE,
+                                          conf.level = 0.95)
+  
+  wilcoxResults[[(3*i)]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)]]]],
+                                        paired = TRUE,
+                                        exact = TRUE,
+                                        conf.int = TRUE,
+                                        conf.level = 0.95)
+  
+  
+  
+}
+
+# for (i in 1:length(dependent_varsTime)) {
+#   if (i<length(dependent_varsTime)){
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000,
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   else {
+#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000,
+#                               burnIn=10000, data=data_frameTime[[i]], r=2)
+#   }
+#   summary(resexact_Time[[i]])
+# }
+
+timeExact = list()
+effectSizeExact = list()
+for (i in 1:length(dependent_varsTime)) {
+  timeExact[[i]] = nominalSymmetryTest(subsetsTime[[i]], exact=TRUE)
+  effectSizeExact[[i]] = cohenG(subsetsTime[[i]])
+  print(effectSizeExact[[i]])
+  print(timeExact[[i]]$Pairwise.symmetry.tests)
+}
+
+for (i in 1:length(dependent_varsTime)) {
+  
+  print(subsetsTime[[i]])
+  print(wilcoxResults[[i]]$p.value)
+  
+}
+
+# wilcoxon tests 
+
+#wilcoxonPairedRC(x = Data$Likert,
+#                g = Data$Time)
+
 
 formula1 <- list(); model1 <- list(); p1nonadjust <- list()
 formula1_subsets <- list(); formula1_totals <- list();totals1 <- list(); subsets1<-list();data_frame1<- list();resexact_1<-list()
@@ -301,7 +525,6 @@ for (i in 1:length(independent_vars)) {
   anova_temp <- Anova(model1[[i]],type="II", test="Wald");
   p1nonadjust[[i]] <- round(anova_temp[[3]],3)
   
-
   print(summary(model1[[i]]))
   print(anova_temp)
   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
@@ -312,30 +535,21 @@ for (i in 1:length(independent_vars)) {
   totals1[[i]]  = subsets1[[i]][1,]+subsets1[[i]][2,]
   data_frame1[[i]] = data.frame(indepvar = levels(as.data.frame(subsets1[[i]])[,2]),depvar=subsets1[[i]][2,],n=totals1[[i]])
   if (i<length(independent_vars)){
-  resexact_1[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
-                    burnIn=5000, data=data_frame1[[i]], r=2)
+    resexact_1[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=5000000, 
+                           burnIn=5000, data=data_frame1[[i]], r=2)
   }
   else {
     resexact_1[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=5000000, 
                            burnIn=5000, data=data_frame1[[i]], r=2)
-    }
+  }
   summary(resexact_1[[i]])
-
+  
   
 }
 
-interest_var = resexact_8
-for (i in 1:(length(independent_vars))) {
-  print(independent_vars[[i]])
-  print((round(exp(interest_var[[i]]$coeffs),3)))
-  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
-  print((round(interest_var[[i]]$p.values,3)))
-  
-}
 
 p1adjust <- p.adjust(p1nonadjust,"BH")
 p1total <- cbind(p1nonadjust,p1adjust)
-a
 
 
 fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
@@ -426,7 +640,7 @@ wald.test(b = coef(fit.logit2), Sigma = vcov(fit.logit2), Terms = 2:6)
 exp(coef(fit.logit2))
 
 fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
-   
+
 formula4 <- list(); model4 <- list(); p4nonadjust <- list()
 formula4_subsets <- list(); formula4_totals <- list();totals4 <- list(); subsets4<-list();data_frame4<- list();resexact_4<-list()
 
@@ -462,20 +676,13 @@ p4total <- cbind(p4nonadjust,p4adjust)
 
 fit.logit4 = glm(minor_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
 
-fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
-
-fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
-fit.multinom_cn_3 = multinom(imm_cn_3~surg_approach,data=data_file_stats)
-brant(fit.ordinal_cn_3)
-
-M1 <- logLik(fit.ordinal_cn_3)
-M2 <- logLik(fit.multinom_cn_3)
-(G <- -2*(M1[1] - M2[1]))
+#M1 <- logLik(fit.ordinal_cn_3)
+#M2 <- logLik(fit.multinom_cn_3)
+#(G <- -2*(M1[1] - M2[1]))
 # degree of freedoM
-pchisq(G,3,lower.tail = FALSE)
+#pchisq(G,3,lower.tail = FALSE)
 
 # using epi in additional to surg_approach says rank deficient
-
 
 formula5 <- list(); model5 <- list(); p5nonadjust <- list()
 formula5_subsets <- list(); formula5_totals <- list();totals5 <- list(); subsets5<-list();data_frame5<- list();resexact_5<-list()
@@ -608,6 +815,30 @@ for (i in 1:length(independent_vars)) {
 }
 p8adjust <- p.adjust(p8nonadjust,"BH")
 p8total <- cbind(p8nonadjust,p8adjust)
+
+
+
+
+interest_var = resexact_1
+for (i in 1:(length(independent_vars))) {
+  print(independent_vars[[i]])
+  print((round(exp(interest_var[[i]]$coeffs),3)))
+  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
+  print((round(interest_var[[i]]$p.values,3)))
+  
+}
+
+#binomial test vs. mcnemar test 
+
+interest_var=resexact_Time
+for (i in 1:(length(dependent_varsTime))) {
+  print(independent_varsTime[[i]])
+  print((round(exp(interest_var[[i]]$coeffs),3)))
+  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
+  print((round(interest_var[[i]]$p.values,3)))
+  
+}
+
 # 
 # 
 # formula9 <- list(); model9 <- list(); p9nonadjust <- list()
@@ -663,29 +894,37 @@ p8total <- cbind(p8nonadjust,p8adjust)
 
 
 if (doOrdinal){
-#fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
-
-#fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-
-fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
-
-
-fit.ordinal_cn_4_imm = polr(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-fit.ordinal_cn_4 = polr(po_1_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-
-fit.ordinal_cn_5_imm = polr(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-
-fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+  
+  fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
+  
+  fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
+  fit.multinom_cn_3 = multinom(imm_cn_3~surg_approach,data=data_file_stats)
+  brant(fit.ordinal_cn_3)
+  
+  
+  #fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+  fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
+  
+  #fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
+  
+  fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
+  
+  
+  fit.ordinal_cn_4_imm = polr(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+  fit.ordinal_cn_4 = polr(po_1_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+  
+  fit.ordinal_cn_5_imm = polr(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+  fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+  
+  fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
+  fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
 } else{
- # fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense+epi_condense+path_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  # fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense+epi_condense+path_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
   fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
   
   #fit.ordinal_cn_3 = glm(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
   
-#  fit.log_cn_3 = glm(po_1_cn_3~surg_approach_condense+epi_condense+path_condense + +age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
+  #  fit.log_cn_3 = glm(po_1_cn_3~surg_approach_condense+epi_condense+path_condense + +age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
   fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
   
   
@@ -700,34 +939,141 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   
   
 }
-  if (doMixed){
+
+if (doMixedRank){
+  # remove incomplete cases prior to ranking
+  
+  data_file_stats_complete3 = data_file_stats[complete.cases(data_file_stats[,c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw")]),]
+  data_file_stats_complete4 = data_file_stats[complete.cases(data_file_stats[,c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw")]),]
+  data_file_stats_complete5 = data_file_stats[complete.cases(data_file_stats[,c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw")]),]
+  data_file_stats_complete6 = data_file_stats[complete.cases(data_file_stats[,c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")]),]
+  
+
+    data_file_stats_long3Rank<-data_file_stats_complete3%>%pivot_longer(cols = c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw"),names_to="names_time_cn3_raw",values_to="cn_3")
+  data_file_stats_long4Rank<-data_file_stats_complete4%>%pivot_longer(cols = c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw"),names_to="names_time_cn4_raw",values_to="cn_4")
+  data_file_stats_long5Rank<-data_file_stats_complete5%>%pivot_longer(cols = c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw"),names_to="names_time_cn5_raw",values_to="cn_5")
+  data_file_stats_long6Rank<-data_file_stats_complete6%>%pivot_longer(cols = c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw"),names_to="names_time_cn6_raw",values_to="cn_6")
+  
+  data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn3_raw, ignore.case = TRUE)~'time1',
+                                                                                             grepl("imm", names_time_cn3_raw, ignore.case = TRUE)~'time2',
+                                                                                             grepl("po_6_3_months", names_time_cn3_raw, ignore.case = TRUE)~'time3',
+                                                                                             grepl("po_1", names_time_cn3_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  data_file_stats_long4Rank <- data_file_stats_long4Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn4_raw, ignore.case = TRUE)~'time1',
+                                                                                                 grepl("imm", names_time_cn4_raw, ignore.case = TRUE)~'time2',
+                                                                                                 grepl("po_6_3_months", names_time_cn4_raw, ignore.case = TRUE)~'time3',
+                                                                                                 grepl("po_1", names_time_cn4_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  data_file_stats_long5Rank <- data_file_stats_long5Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn5_raw, ignore.case = TRUE)~'time1',
+                                                                                                 grepl("imm", names_time_cn5_raw, ignore.case = TRUE)~'time2',
+                                                                                                 grepl("po_6_3_months", names_time_cn5_raw, ignore.case = TRUE)~'time3',
+                                                                                                 grepl("po_1", names_time_cn5_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  data_file_stats_long6Rank <- data_file_stats_long6Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn6_raw, ignore.case = TRUE)~'time1',
+                                                                                                 grepl("imm", names_time_cn6_raw, ignore.case = TRUE)~'time2',
+                                                                                                 grepl("po_6_3_months", names_time_cn6_raw, ignore.case = TRUE)~'time3',
+                                                                                                 grepl("po_1", names_time_cn6_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+
+  
+  # do ranks
+  
+  data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(rankedcn3 = rank(cn_3))
+  data_file_stats_long4Rank <- data_file_stats_long4Rank %>% mutate(rankedcn4 = rank(cn_4))
+  data_file_stats_long5Rank <- data_file_stats_long5Rank %>% mutate(rankedcn5 = rank(cn_5))
+  data_file_stats_long6Rank <- data_file_stats_long6Rank %>% mutate(rankedcn6 = rank(cn_6))
+  
+  data_file_stats_long3Rank$names_time_cn3_raw = relevel(data_file_stats_long3Rank$time_point, ref='time1')
+  data_file_stats_long4Rank$names_time_cn4_raw = relevel(data_file_stats_long4Rank$time_point, ref='time1')
+  data_file_stats_long5Rank$names_time_cn5_raw = relevel(data_file_stats_long5Rank$time_point, ref='time1')
+  data_file_stats_long6Rank$names_time_cn6_raw = relevel(data_file_stats_long6Rank$time_point, ref='time1')
+  
+
+  
+  cn_3_rank_model <- lmer(rankedcn3 ~ time_point + (1|id),data=data_file_stats_long3Rank)
+  cn_4_rank_model <- lmer(rankedcn4 ~ time_point + (1|id),data=data_file_stats_long4Rank)
+  cn_5_rank_model <- lmer(rankedcn5 ~ time_point + (1|id),data=data_file_stats_long5Rank)
+  cn_6_rank_model <- lmer(rankedcn6 ~ time_point + (1|id),data=data_file_stats_long6Rank)
+  
+  emm_model_3 = emmeans(cn_3_rank_model, "time_point")
+  pairs(emm_model_3, reverse = TRUE)
+  Anova(cn_3_rank_model,type="III")
+  plot_model(cn_3_rank_model)
+  simulationOutput3 <- simulateResiduals(fittedModel = cn_3_rank_model)
+  plot(simulationOutput3, asFactor = T)
+
+  emm_model_4 = emmeans(cn_4_rank_model, "time_point")
+  pairs(emm_model_4, reverse = TRUE)
+  Anova(cn_4_rank_model,type="III")
+  plot_model(cn_4_rank_model)
+  simulationOutput4 <- simulateResiduals(fittedModel = cn_4_rank_model)
+  plot(simulationOutput4, asFactor = T)
+
+  emm_model_5 = emmeans(cn_5_rank_model, "time_point")
+  pairs(emm_model_5, reverse = TRUE)
+  Anova(cn_5_rank_model,type="III")
+  plot_model(cn_5_rank_model)
+  simulationOutput5 <- simulateResiduals(fittedModel = cn_5_rank_model)
+  plot(simulationOutput5, asFactor = T)
+
+  emm_model_6 = emmeans(cn_6_rank_model, "time_point")
+  pairs(emm_model_6, reverse = TRUE)
+  Anova(cn_6_rank_model,type="III")
+  plot_model(cn_6_rank_model)
+  simulationOutput6 <- simulateResiduals(fittedModel = cn_6_rank_model)
+  plot(simulationOutput6, asFactor = T)
+  
+}
+
+if (doMixed){
   data_file_stats_long3<-data_file_stats%>%pivot_longer(cols = c("imm_cn_3","po_6_3_months_cn_3","po_1_cn_3"),names_to="names_time_cn3",values_to="cn_3")
   data_file_stats_long4<-data_file_stats%>%pivot_longer(cols = c("imm_cn_4","po_6_3_months_cn_4","po_1_cn_4"),names_to="names_time_cn4",values_to="cn_4")
   data_file_stats_long5<-data_file_stats%>%pivot_longer(cols = c("imm_cn_5","po_6_3_months_cn_5","po_1_cn_5"),names_to="names_time_cn5",values_to="cn_5")
   data_file_stats_long6<-data_file_stats%>%pivot_longer(cols = c("imm_cn_6","po_6_3_months_cn_6","po_1_cn_6"),names_to="names_time_cn6",values_to="cn_6")
   
   data_file_stats_long3 <- data_file_stats_long3 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn3, ignore.case = TRUE)~'time1',
-                                                                              grepl("po_6_3_months", names_time_cn3, ignore.case = TRUE)~'time2',
-                                                                              grepl("po_1", names_time_cn3, ignore.case = TRUE)~'time3'
-                                                                              )))
+                                                                                             grepl("po_6_3_months", names_time_cn3, ignore.case = TRUE)~'time2',
+                                                                                             grepl("po_1", names_time_cn3, ignore.case = TRUE)~'time3'
+  )))
   
   data_file_stats_long4 <- data_file_stats_long4 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn4, ignore.case = TRUE)~'time1',
-                                                                                 grepl("po_6_3_months", names_time_cn4, ignore.case = TRUE)~'time2',
-                                                                                 grepl("po_1", names_time_cn4, ignore.case = TRUE)~'time3'
+                                                                                             grepl("po_6_3_months", names_time_cn4, ignore.case = TRUE)~'time2',
+                                                                                             grepl("po_1", names_time_cn4, ignore.case = TRUE)~'time3'
   )))
   
   data_file_stats_long5 <- data_file_stats_long5 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn5, ignore.case = TRUE)~'time1',
-                                                                                 grepl("po_6_3_months", names_time_cn5, ignore.case = TRUE)~'time2',
-                                                                                 grepl("po_1", names_time_cn5, ignore.case = TRUE)~'time3'
+                                                                                             grepl("po_6_3_months", names_time_cn5, ignore.case = TRUE)~'time2',
+                                                                                             grepl("po_1", names_time_cn5, ignore.case = TRUE)~'time3'
   )))
   
   data_file_stats_long6 <- data_file_stats_long6 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn6, ignore.case = TRUE)~'time1',
-                                                                                 grepl("po_6_3_months", names_time_cn6, ignore.case = TRUE)~'time2',
-                                                                                 grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
+                                                                                             grepl("po_6_3_months", names_time_cn6, ignore.case = TRUE)~'time2',
+                                                                                             grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
   )))
   
+  fit.cn_time_3_ord = clmm(cn_3 ~ time_point + (1|id), data=data_file_stats_long3)
+  fit.cn_time_4_ord = clmm(cn_4 ~ time_point + (1|id), data=data_file_stats_long4)
+  fit.cn_time_5_ord = clmm(cn_5 ~ time_point + (1|id), data=data_file_stats_long5)
+  fit.cn_time_6_ord = clmm(cn_6 ~ time_point + (1|id), data=data_file_stats_long6)
+  
+  emm_model_3_ord = emmeans(fit.cn_time_3_ord, "time_point")
+  pairs(emm_model_3_ord, reverse = TRUE)
+  
+  emm_model_4_ord = emmeans(fit.cn_time_4_ord, "time_point")
+  pairs(emm_model_4_ord, reverse = TRUE)
+  
+  emm_model_5_ord = emmeans(fit.cn_time_5_ord, "time_point")
+  pairs(emm_model_5_ord, reverse = TRUE)
+  
+  emm_model_6_ord = emmeans(fit.cn_time_6_ord, "time_point")
+  pairs(emm_model_6_ord, reverse = TRUE)
+  
   # set contrast options for unordered and ordered variables 
-  options(contrasts = rep ("contr.treatment", 2))
+  #options(contrasts = rep ("contr.treatment", 2)) - this was previously selected 
   
   fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
   fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id), data=data_file_stats_long4,family=binomial)
@@ -735,9 +1081,9 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id), data=data_file_stats_long6,family=binomial)
   
   fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
-#  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
- # fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
-#  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
+  #  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
+  # fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
+  #  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
   
   fit.cn_time_3 = glmer(cn_3 ~ time_point + (time_point|id), data=data_file_stats_long3,family=binomial)
   emm_model_3 = emmeans(fit.cn_time_3, "time_point")
@@ -746,10 +1092,10 @@ fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+
   
   simulationOutput <- simulateResiduals(fittedModel = fit.cn_time_3)
   plot(simulationOutput, asFactor = T)
- # plotResiduals(simulationOutput,data_file_stats_long3$time_point, quantreg = T)
+  # plotResiduals(simulationOutput,data_file_stats_long3$time_point, quantreg = T)
   
   
-
+  
   options(contrasts = c("contr.sum","contr.poly"))
   contr.sum(3)
   
