@@ -361,6 +361,95 @@ if (saveFig){
 plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
 plot3
 
+if (doMixedRank){
+  # remove incomplete cases prior to ranking
+  
+  data_file_stats_complete3 = data_file_stats[complete.cases(data_file_stats[,c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw")]),]
+  data_file_stats_complete4 = data_file_stats[complete.cases(data_file_stats[,c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw")]),]
+  data_file_stats_complete5 = data_file_stats[complete.cases(data_file_stats[,c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw")]),]
+  data_file_stats_complete6 = data_file_stats[complete.cases(data_file_stats[,c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")]),]
+  
+  
+  data_file_stats_long3Rank<-data_file_stats_complete3%>%pivot_longer(cols = c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw"),names_to="names_time_cn3_raw",values_to="cn_3")
+  data_file_stats_long4Rank<-data_file_stats_complete4%>%pivot_longer(cols = c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw"),names_to="names_time_cn4_raw",values_to="cn_4")
+  data_file_stats_long5Rank<-data_file_stats_complete5%>%pivot_longer(cols = c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw"),names_to="names_time_cn5_raw",values_to="cn_5")
+  data_file_stats_long6Rank<-data_file_stats_complete6%>%pivot_longer(cols = c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw"),names_to="names_time_cn6_raw",values_to="cn_6")
+  
+  data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn3_raw, ignore.case = TRUE)~'time1',
+                                                                                                     grepl("imm", names_time_cn3_raw, ignore.case = TRUE)~'time2',
+                                                                                                     grepl("po_6_3_months", names_time_cn3_raw, ignore.case = TRUE)~'time3',
+                                                                                                     grepl("po_1", names_time_cn3_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  data_file_stats_long4Rank <- data_file_stats_long4Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn4_raw, ignore.case = TRUE)~'time1',
+                                                                                                     grepl("imm", names_time_cn4_raw, ignore.case = TRUE)~'time2',
+                                                                                                     grepl("po_6_3_months", names_time_cn4_raw, ignore.case = TRUE)~'time3',
+                                                                                                     grepl("po_1", names_time_cn4_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  data_file_stats_long5Rank <- data_file_stats_long5Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn5_raw, ignore.case = TRUE)~'time1',
+                                                                                                     grepl("imm", names_time_cn5_raw, ignore.case = TRUE)~'time2',
+                                                                                                     grepl("po_6_3_months", names_time_cn5_raw, ignore.case = TRUE)~'time3',
+                                                                                                     grepl("po_1", names_time_cn5_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  data_file_stats_long6Rank <- data_file_stats_long6Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn6_raw, ignore.case = TRUE)~'time1',
+                                                                                                     grepl("imm", names_time_cn6_raw, ignore.case = TRUE)~'time2',
+                                                                                                     grepl("po_6_3_months", names_time_cn6_raw, ignore.case = TRUE)~'time3',
+                                                                                                     grepl("po_1", names_time_cn6_raw, ignore.case = TRUE)~'time4'
+  )))
+  
+  
+  
+  # do ranks
+  
+  data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(rankedcn3 = rank(cn_3))
+  data_file_stats_long4Rank <- data_file_stats_long4Rank %>% mutate(rankedcn4 = rank(cn_4))
+  data_file_stats_long5Rank <- data_file_stats_long5Rank %>% mutate(rankedcn5 = rank(cn_5))
+  data_file_stats_long6Rank <- data_file_stats_long6Rank %>% mutate(rankedcn6 = rank(cn_6))
+  
+  data_file_stats_long3Rank$names_time_cn3_raw = relevel(data_file_stats_long3Rank$time_point, ref='time1')
+  data_file_stats_long4Rank$names_time_cn4_raw = relevel(data_file_stats_long4Rank$time_point, ref='time1')
+  data_file_stats_long5Rank$names_time_cn5_raw = relevel(data_file_stats_long5Rank$time_point, ref='time1')
+  data_file_stats_long6Rank$names_time_cn6_raw = relevel(data_file_stats_long6Rank$time_point, ref='time1')
+  
+  
+  
+  cn_3_rank_model <- lmer(rankedcn3 ~ time_point + (1|id),data=data_file_stats_long3Rank)
+  cn_4_rank_model <- lmer(rankedcn4 ~ time_point + (1|id),data=data_file_stats_long4Rank)
+  cn_5_rank_model <- lmer(rankedcn5 ~ time_point + (1|id),data=data_file_stats_long5Rank)
+  cn_6_rank_model <- lmer(rankedcn6 ~ time_point + (1|id),data=data_file_stats_long6Rank)
+  
+  emm_model_3 = emmeans(cn_3_rank_model, "time_point")
+  pairs(emm_model_3, reverse = TRUE)
+  Anova(cn_3_rank_model,type="III")
+  plot_model(cn_3_rank_model)
+  simulationOutput3 <- simulateResiduals(fittedModel = cn_3_rank_model)
+  plot(simulationOutput3, asFactor = T)
+  
+  emm_model_4 = emmeans(cn_4_rank_model, "time_point")
+  pairs(emm_model_4, reverse = TRUE)
+  Anova(cn_4_rank_model,type="III")
+  plot_model(cn_4_rank_model)
+  simulationOutput4 <- simulateResiduals(fittedModel = cn_4_rank_model)
+  plot(simulationOutput4, asFactor = T)
+  
+  emm_model_5 = emmeans(cn_5_rank_model, "time_point")
+  pairs(emm_model_5, reverse = TRUE)
+  Anova(cn_5_rank_model,type="III")
+  plot_model(cn_5_rank_model)
+  simulationOutput5 <- simulateResiduals(fittedModel = cn_5_rank_model)
+  plot(simulationOutput5, asFactor = T)
+  
+  emm_model_6 = emmeans(cn_6_rank_model, "time_point")
+  pairs(emm_model_6, reverse = TRUE)
+  Anova(cn_6_rank_model,type="III")
+  plot_model(cn_6_rank_model)
+  simulationOutput6 <- simulateResiduals(fittedModel = cn_6_rank_model)
+  plot(simulationOutput6, asFactor = T)
+  
+}
+
 #exact logistic regression for final table - trying to look at change - this didn't work
 formulaTimeChange <- list(); modelTimeChange <- list(); pTimeChangenonadjust <- list()
 formulaTimeChange_subsets <- list(); formulaTimeChange_totals <- list();totalsTimeChange <- list(); subsetsTimeChange<-list();data_frameTimeChange<- list();resexact_TimeChange<-list()
@@ -817,9 +906,8 @@ p8adjust <- p.adjust(p8nonadjust,"BH")
 p8total <- cbind(p8nonadjust,p8adjust)
 
 
-
-
-interest_var = resexact_1
+interest_var = resexact_8
+formula8
 for (i in 1:(length(independent_vars))) {
   print(independent_vars[[i]])
   print((round(exp(interest_var[[i]]$coeffs),3)))
@@ -940,94 +1028,7 @@ if (doOrdinal){
   
 }
 
-if (doMixedRank){
-  # remove incomplete cases prior to ranking
-  
-  data_file_stats_complete3 = data_file_stats[complete.cases(data_file_stats[,c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw")]),]
-  data_file_stats_complete4 = data_file_stats[complete.cases(data_file_stats[,c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw")]),]
-  data_file_stats_complete5 = data_file_stats[complete.cases(data_file_stats[,c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw")]),]
-  data_file_stats_complete6 = data_file_stats[complete.cases(data_file_stats[,c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")]),]
-  
 
-    data_file_stats_long3Rank<-data_file_stats_complete3%>%pivot_longer(cols = c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw"),names_to="names_time_cn3_raw",values_to="cn_3")
-  data_file_stats_long4Rank<-data_file_stats_complete4%>%pivot_longer(cols = c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw"),names_to="names_time_cn4_raw",values_to="cn_4")
-  data_file_stats_long5Rank<-data_file_stats_complete5%>%pivot_longer(cols = c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw"),names_to="names_time_cn5_raw",values_to="cn_5")
-  data_file_stats_long6Rank<-data_file_stats_complete6%>%pivot_longer(cols = c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw"),names_to="names_time_cn6_raw",values_to="cn_6")
-  
-  data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn3_raw, ignore.case = TRUE)~'time1',
-                                                                                             grepl("imm", names_time_cn3_raw, ignore.case = TRUE)~'time2',
-                                                                                             grepl("po_6_3_months", names_time_cn3_raw, ignore.case = TRUE)~'time3',
-                                                                                             grepl("po_1", names_time_cn3_raw, ignore.case = TRUE)~'time4'
-  )))
-  
-  data_file_stats_long4Rank <- data_file_stats_long4Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn4_raw, ignore.case = TRUE)~'time1',
-                                                                                                 grepl("imm", names_time_cn4_raw, ignore.case = TRUE)~'time2',
-                                                                                                 grepl("po_6_3_months", names_time_cn4_raw, ignore.case = TRUE)~'time3',
-                                                                                                 grepl("po_1", names_time_cn4_raw, ignore.case = TRUE)~'time4'
-  )))
-  
-  data_file_stats_long5Rank <- data_file_stats_long5Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn5_raw, ignore.case = TRUE)~'time1',
-                                                                                                 grepl("imm", names_time_cn5_raw, ignore.case = TRUE)~'time2',
-                                                                                                 grepl("po_6_3_months", names_time_cn5_raw, ignore.case = TRUE)~'time3',
-                                                                                                 grepl("po_1", names_time_cn5_raw, ignore.case = TRUE)~'time4'
-  )))
-  
-  data_file_stats_long6Rank <- data_file_stats_long6Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn6_raw, ignore.case = TRUE)~'time1',
-                                                                                                 grepl("imm", names_time_cn6_raw, ignore.case = TRUE)~'time2',
-                                                                                                 grepl("po_6_3_months", names_time_cn6_raw, ignore.case = TRUE)~'time3',
-                                                                                                 grepl("po_1", names_time_cn6_raw, ignore.case = TRUE)~'time4'
-  )))
-  
-
-  
-  # do ranks
-  
-  data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(rankedcn3 = rank(cn_3))
-  data_file_stats_long4Rank <- data_file_stats_long4Rank %>% mutate(rankedcn4 = rank(cn_4))
-  data_file_stats_long5Rank <- data_file_stats_long5Rank %>% mutate(rankedcn5 = rank(cn_5))
-  data_file_stats_long6Rank <- data_file_stats_long6Rank %>% mutate(rankedcn6 = rank(cn_6))
-  
-  data_file_stats_long3Rank$names_time_cn3_raw = relevel(data_file_stats_long3Rank$time_point, ref='time1')
-  data_file_stats_long4Rank$names_time_cn4_raw = relevel(data_file_stats_long4Rank$time_point, ref='time1')
-  data_file_stats_long5Rank$names_time_cn5_raw = relevel(data_file_stats_long5Rank$time_point, ref='time1')
-  data_file_stats_long6Rank$names_time_cn6_raw = relevel(data_file_stats_long6Rank$time_point, ref='time1')
-  
-
-  
-  cn_3_rank_model <- lmer(rankedcn3 ~ time_point + (1|id),data=data_file_stats_long3Rank)
-  cn_4_rank_model <- lmer(rankedcn4 ~ time_point + (1|id),data=data_file_stats_long4Rank)
-  cn_5_rank_model <- lmer(rankedcn5 ~ time_point + (1|id),data=data_file_stats_long5Rank)
-  cn_6_rank_model <- lmer(rankedcn6 ~ time_point + (1|id),data=data_file_stats_long6Rank)
-  
-  emm_model_3 = emmeans(cn_3_rank_model, "time_point")
-  pairs(emm_model_3, reverse = TRUE)
-  Anova(cn_3_rank_model,type="III")
-  plot_model(cn_3_rank_model)
-  simulationOutput3 <- simulateResiduals(fittedModel = cn_3_rank_model)
-  plot(simulationOutput3, asFactor = T)
-
-  emm_model_4 = emmeans(cn_4_rank_model, "time_point")
-  pairs(emm_model_4, reverse = TRUE)
-  Anova(cn_4_rank_model,type="III")
-  plot_model(cn_4_rank_model)
-  simulationOutput4 <- simulateResiduals(fittedModel = cn_4_rank_model)
-  plot(simulationOutput4, asFactor = T)
-
-  emm_model_5 = emmeans(cn_5_rank_model, "time_point")
-  pairs(emm_model_5, reverse = TRUE)
-  Anova(cn_5_rank_model,type="III")
-  plot_model(cn_5_rank_model)
-  simulationOutput5 <- simulateResiduals(fittedModel = cn_5_rank_model)
-  plot(simulationOutput5, asFactor = T)
-
-  emm_model_6 = emmeans(cn_6_rank_model, "time_point")
-  pairs(emm_model_6, reverse = TRUE)
-  Anova(cn_6_rank_model,type="III")
-  plot_model(cn_6_rank_model)
-  simulationOutput6 <- simulateResiduals(fittedModel = cn_6_rank_model)
-  plot(simulationOutput6, asFactor = T)
-  
-}
 
 if (doMixed){
   data_file_stats_long3<-data_file_stats%>%pivot_longer(cols = c("imm_cn_3","po_6_3_months_cn_3","po_1_cn_3"),names_to="names_time_cn3",values_to="cn_3")
