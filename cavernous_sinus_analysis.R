@@ -430,8 +430,6 @@ if (doMixedRank){
   data_file_stats_long5Rank$names_time_cn5_raw = relevel(data_file_stats_long5Rank$time_point, ref='time1')
   data_file_stats_long6Rank$names_time_cn6_raw = relevel(data_file_stats_long6Rank$time_point, ref='time1')
   
-  
-  
   cn_3_rank_model <- lmer(rankedcn3 ~ time_point + (1|id),data=data_file_stats_long3Rank)
   cn_4_rank_model <- lmer(rankedcn4 ~ time_point + (1|id),data=data_file_stats_long4Rank)
   cn_5_rank_model <- lmer(rankedcn5 ~ time_point + (1|id),data=data_file_stats_long5Rank)
