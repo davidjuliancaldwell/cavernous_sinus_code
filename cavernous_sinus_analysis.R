@@ -49,6 +49,7 @@ include_na_table = FALSE
 doOrdinal = FALSE
 doMixed = FALSE
 doMixedRank = TRUE
+removeNaNwholeSubject = FALSE 
 fontSize = 10
 
 sect_properties <- prop_section(
@@ -362,19 +363,35 @@ plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter
 plot3
 
 if (doMixedRank){
+  
+  if (removeNaNwholeSubject){
   # remove incomplete cases prior to ranking
   
   data_file_stats_complete3 = data_file_stats[complete.cases(data_file_stats[,c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw")]),]
   data_file_stats_complete4 = data_file_stats[complete.cases(data_file_stats[,c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw")]),]
   data_file_stats_complete5 = data_file_stats[complete.cases(data_file_stats[,c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw")]),]
   data_file_stats_complete6 = data_file_stats[complete.cases(data_file_stats[,c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")]),]
-  
-  
+ 
   data_file_stats_long3Rank<-data_file_stats_complete3%>%pivot_longer(cols = c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw"),names_to="names_time_cn3_raw",values_to="cn_3")
   data_file_stats_long4Rank<-data_file_stats_complete4%>%pivot_longer(cols = c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw"),names_to="names_time_cn4_raw",values_to="cn_4")
   data_file_stats_long5Rank<-data_file_stats_complete5%>%pivot_longer(cols = c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw"),names_to="names_time_cn5_raw",values_to="cn_5")
   data_file_stats_long6Rank<-data_file_stats_complete6%>%pivot_longer(cols = c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw"),names_to="names_time_cn6_raw",values_to="cn_6")
   
+  } else {
+    
+    data_file_stats_long3Rank<-data_file_stats%>%pivot_longer(cols = c("preop_3","imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw"),names_to="names_time_cn3_raw",values_to="cn_3")
+    data_file_stats_long4Rank<-data_file_stats%>%pivot_longer(cols = c("preop_4","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw"),names_to="names_time_cn4_raw",values_to="cn_4")
+    data_file_stats_long5Rank<-data_file_stats%>%pivot_longer(cols = c("preop_5","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw"),names_to="names_time_cn5_raw",values_to="cn_5")
+    data_file_stats_long6Rank<-data_file_stats%>%pivot_longer(cols = c("preop_6","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw"),names_to="names_time_cn6_raw",values_to="cn_6")
+    
+    data_file_stats_long3Rank = data_file_stats_long3Rank[complete.cases(data_file_stats_long3Rank[,c("cn_3")]),]
+    data_file_stats_long4Rank = data_file_stats_long4Rank[complete.cases(data_file_stats_long4Rank[,c("cn_4")]),]
+    data_file_stats_long5Rank = data_file_stats_long5Rank[complete.cases(data_file_stats_long5Rank[,c("cn_5")]),]
+    data_file_stats_long6Rank = data_file_stats_long6Rank[complete.cases(data_file_stats_long6Rank[,c("cn_6")]),]
+    
+  }
+  
+
   data_file_stats_long3Rank <- data_file_stats_long3Rank %>% mutate(time_point = as.factor(case_when(grepl("preop_", names_time_cn3_raw, ignore.case = TRUE)~'time1',
                                                                                                      grepl("imm", names_time_cn3_raw, ignore.case = TRUE)~'time2',
                                                                                                      grepl("po_6_3_months", names_time_cn3_raw, ignore.case = TRUE)~'time3',
@@ -906,7 +923,7 @@ p8adjust <- p.adjust(p8nonadjust,"BH")
 p8total <- cbind(p8nonadjust,p8adjust)
 
 
-interest_var = resexact_8
+interest_var = resexact_5
 formula8
 for (i in 1:(length(independent_vars))) {
   print(independent_vars[[i]])
