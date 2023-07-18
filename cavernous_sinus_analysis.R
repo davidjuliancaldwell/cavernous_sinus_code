@@ -430,196 +430,40 @@ if (doMixedRank){
   data_file_stats_long5Rank$names_time_cn5_raw = relevel(data_file_stats_long5Rank$time_point, ref='time1')
   data_file_stats_long6Rank$names_time_cn6_raw = relevel(data_file_stats_long6Rank$time_point, ref='time1')
   
-  cn_3_rank_model <- lmer(rankedcn3 ~ time_point + (1|id),data=data_file_stats_long3Rank)
-  cn_4_rank_model <- lmer(rankedcn4 ~ time_point + (1|id),data=data_file_stats_long4Rank)
-  cn_5_rank_model <- lmer(rankedcn5 ~ time_point + (1|id),data=data_file_stats_long5Rank)
-  cn_6_rank_model <- lmer(rankedcn6 ~ time_point + (1|id),data=data_file_stats_long6Rank)
+  cn_3_rank_model <- lme4::lmer(rankedcn3 ~ time_point + (1|id),data=data_file_stats_long3Rank)
+  cn_4_rank_model <- lme4::lmer(rankedcn4 ~ time_point + (1|id),data=data_file_stats_long4Rank)
+  cn_5_rank_model <- lme4::lmer(rankedcn5 ~ time_point + (1|id),data=data_file_stats_long5Rank)
+  cn_6_rank_model <- lme4::lmer(rankedcn6 ~ time_point + (1|id),data=data_file_stats_long6Rank)
   
   emm_model_3 = emmeans(cn_3_rank_model, "time_point")
   pairs(emm_model_3, reverse = TRUE)
-  Anova(cn_3_rank_model,type="III")
+  Anova(cn_3_rank_model,type="II")
   plot_model(cn_3_rank_model)
   simulationOutput3 <- simulateResiduals(fittedModel = cn_3_rank_model)
   plot(simulationOutput3, asFactor = T)
   
   emm_model_4 = emmeans(cn_4_rank_model, "time_point")
   pairs(emm_model_4, reverse = TRUE)
-  Anova(cn_4_rank_model,type="III")
+  Anova(cn_4_rank_model,type="II")
   plot_model(cn_4_rank_model)
   simulationOutput4 <- simulateResiduals(fittedModel = cn_4_rank_model)
   plot(simulationOutput4, asFactor = T)
   
   emm_model_5 = emmeans(cn_5_rank_model, "time_point")
   pairs(emm_model_5, reverse = TRUE)
-  Anova(cn_5_rank_model,type="III")
+  Anova(cn_5_rank_model,type="II")
   plot_model(cn_5_rank_model)
   simulationOutput5 <- simulateResiduals(fittedModel = cn_5_rank_model)
   plot(simulationOutput5, asFactor = T)
   
   emm_model_6 = emmeans(cn_6_rank_model, "time_point")
   pairs(emm_model_6, reverse = TRUE)
-  Anova(cn_6_rank_model,type="III")
+  Anova(cn_6_rank_model,type="II")
   plot_model(cn_6_rank_model)
   simulationOutput6 <- simulateResiduals(fittedModel = cn_6_rank_model)
   plot(simulationOutput6, asFactor = T)
   
 }
-
-#exact logistic regression for final table - trying to look at change - this didn't work
-formulaTimeChange <- list(); modelTimeChange <- list(); pTimeChangenonadjust <- list()
-formulaTimeChange_subsets <- list(); formulaTimeChange_totals <- list();totalsTimeChange <- list(); subsetsTimeChange<-list();data_frameTimeChange<- list();resexact_TimeChange<-list()
-for (i in 1:length(independent_varsTimeChange)) {
-  formulaTimeChange[[(2*i)-1]] = paste0(dependent_varsTimeChange[[(2*i)-1]], " ~ ", independent_varsTimeChange[[i]])
-  formulaTimeChange[[(2*i)]] = paste0(dependent_varsTimeChange[[(2*i)]], " ~ ", independent_varsTimeChange[[i]])
-  
-  modelTimeChange[[(2*i)-1]] = glm(formulaTimeChange[[(2*i)-1]],data=data_file_stats_subset,family="binomial")
-  modelTimeChange[[(2*i)]] = glm(formulaTimeChange[[(2*i)]],data=data_file_stats_subset,family="binomial")
-  
-  anova_temp <- Anova(modelTimeChange[[(2*i)-1]],type="II", test="Wald");
-  pTimeChangenonadjust[[(2*i)-1]] <- round(anova_temp[[3]],3)
-  
-  anova_temp <- Anova(modelTimeChange[[(2*i)]],type="II", test="Wald");
-  pTimeChangenonadjust[[(2*i)]] <- round(anova_temp[[3]],3)
-  
-  print(summary(modelTimeChange[[i]]))
-  print(anova_temp)
-  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-  
-  formulaTimeChange_subsets[[(2*i)-1]] = paste0("~",dependent_varsTimeChange[[(2*i)-1]], " + ", independent_varsTimeChange[[i]])
-  formulaTimeChange_subsets[[(2*i)]] = paste0("~",dependent_varsTimeChange[[(2*i)]], " + ", independent_varsTimeChange[[i]])
-  
-  subsetsTimeChange[[(2*i)-1]] = xtabs(formulaTimeChange_subsets[[(2*i)-1]],data=data_file_stats_subset)
-  subsetsTimeChange[[(2*i)]] = xtabs(formulaTimeChange_subsets[[(2*i)]],data=data_file_stats_subset)
-  
-  totalsTimeChange[[(2*i)-1]]  = subsetsTimeChange[[(2*i)-1]][1,]+subsetsTimeChange[[(2*i)-1]][2,]
-  totalsTimeChange[[(2*i)]]  = subsetsTimeChange[[(2*i)]][1,]+subsetsTimeChange[[(2*i)]][2,]
-  
-  data_frameTimeChange[[(2*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)-1]])[,2]),depvar=subsetsTimeChange[[(2*i)-1]][2,],n=totalsTimeChange[[(2*i)-1]])
-  data_frameTimeChange[[(2*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTimeChange[[(2*i)]])[,2]),depvar=subsetsTimeChange[[(2*i)]][2,],n=totalsTimeChange[[(2*i)]])
-  
-}
-# 
-# for (i in 1:length(dependent_varsTime)) {
-#   if (i<length(dependent_varsTime)){
-#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000, 
-#                               burnIn=10000, data=data_frameTime[[i]], r=2)
-#   }
-#   else {
-#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000, 
-#                               burnIn=10000, data=data_frameTime[[i]], r=2)
-#   }
-#   summary(resexact_Time[[i]])
-# }
-
-timeChangeExact = list()
-
-for (i in 1:length(dependent_varsTimeChange)) {
-  timeChangeExact[[i]] = nominalSymmetryTest(subsetsTimeChange[[i]], method = "exact")
-  
-  print(subsetsTimeChange[[i]])
-  print(timeChangeExact[[i]]$Global.test.for.symmetry)
-}
-
-# exact logistic regression for final table - trying to look at compared to baseline 
-formulaTime <- list(); modelTime <- list(); pTimenonadjust <- list()
-formulaTime_subsets <- list(); formulaTime_totals <- list();totalsTime <- list(); subsetsTime<-list();data_frameTime<- list();resexact_Time<-list()
-wilcoxResults <- list();
-for (i in 1:length(independent_varsTime)) {
-  formulaTime[[(3*i)-2]] = paste0(dependent_varsTime[[(3*i)-2]], " ~ ", independent_varsTime[[i]])
-  formulaTime[[(3*i)-1]] = paste0(dependent_varsTime[[(3*i)-1]], " ~ ", independent_varsTime[[i]])
-  formulaTime[[(3*i)]] = paste0(dependent_varsTime[[(3*i)]], " ~ ", independent_varsTime[[i]])
-  
-  #modelTime[[(3*i)-2]] = glm(formulaTime[[(3*i)-2]],data=data_file_stats,family="binomial") 
-  #modelTime[[(3*i)-1]] = glm(formulaTime[[(3*i)-1]],data=data_file_stats,family="binomial") 
-  #modelTime[[(3*i)]] = glm(formulaTime[[(3*i)]],data=data_file_stats,family="binomial") 
-  
-  #anova_temp <- Anova(modelTime[[(3*i)-2]],type="II", test="Wald");
-  #pTimenonadjust[[(3*i)-2]] <- round(anova_temp[[3]],3)
-  
-  #anova_temp <- Anova(modelTime[[(3*i)-1]],type="II", test="Wald");
-  #pTimenonadjust[[(3*i)-1]] <- round(anova_temp[[3]],3)
-  
-  #anova_temp <- Anova(modelTime[[(3*i)]],type="II", test="Wald");
-  #pTimenonadjust[[(3*i)]] <- round(anova_temp[[3]],3)
-  
-  #print(summary(modelTime[[i]]))
-  #print(anova_temp)
-  #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-  #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-  
-  formulaTime_subsets[[(3*i)-2]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)-2]])
-  formulaTime_subsets[[(3*i)-1]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)-1]])
-  formulaTime_subsets[[(3*i)]] = paste0("~", independent_varsTime[[i]], " + ", dependent_varsTime[[(3*i)]])
-  
-  subsetsTime[[(3*i)-2]] = xtabs(formulaTime_subsets[[(3*i)-2]],data=data_file_stats_subset_raw)
-  subsetsTime[[(3*i)-1]] = xtabs(formulaTime_subsets[[(3*i)-1]],data=data_file_stats_subset_raw)
-  subsetsTime[[(3*i)]] = xtabs(formulaTime_subsets[[(3*i)]],data=data_file_stats_subset_raw)
-  
-  totalsTime[[(3*i)-2]]  = subsetsTime[[(3*i)-2]][1,]+subsetsTime[[(3*i)-2]][2,]
-  totalsTime[[(3*i)-1]]  = subsetsTime[[(3*i)-1]][1,]+subsetsTime[[(3*i)-1]][2,]
-  totalsTime[[(3*i)]]  = subsetsTime[[(3*i)]][1,]+subsetsTime[[(3*i)]][2,]
-  
-  data_frameTime[[(3*i)-2]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-2]])[,2]),depvar=subsetsTime[[(3*i)-2]][2,],n=totalsTime[[(3*i)-2]])
-  data_frameTime[[(3*i)-1]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)-1]])[,2]),depvar=subsetsTime[[(3*i)-1]][2,],n=totalsTime[[(3*i)-1]])
-  data_frameTime[[(3*i)]] = data.frame(indepvar = levels(as.data.frame(subsetsTime[[(3*i)]])[,2]),depvar=subsetsTime[[(3*i)]][2,],n=totalsTime[[(3*i)]])
-  
-  
-  wilcoxResults[[(3*i)-2]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)-2]]]],
-                                          paired = TRUE,
-                                          exact = TRUE,
-                                          conf.int = TRUE,
-                                          conf.level = 0.95)
-  
-  wilcoxResults[[(3*i)-1]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)-1]]]],
-                                          paired = TRUE,
-                                          exact = TRUE,
-                                          conf.int = TRUE,
-                                          conf.level = 0.95)
-  
-  wilcoxResults[[(3*i)]] = wilcox.exact(data_file_stats_subset_raw_numeric[[independent_varsTime[[i]]]] , data_file_stats_subset_raw_numeric[[dependent_varsTime[[(3*i)]]]],
-                                        paired = TRUE,
-                                        exact = TRUE,
-                                        conf.int = TRUE,
-                                        conf.level = 0.95)
-  
-  
-  
-}
-
-# for (i in 1:length(dependent_varsTime)) {
-#   if (i<length(dependent_varsTime)){
-#     resexact_Time[[i]] = elrm(depvar/n ~ as.factor(indepvar), interest = ~as.factor(indepvar), iter=10000000,
-#                               burnIn=10000, data=data_frameTime[[i]], r=2)
-#   }
-#   else {
-#     resexact_Time[[i]] = elrm(depvar/n ~ as.integer(indepvar), interest = ~as.integer(indepvar), iter=10000000,
-#                               burnIn=10000, data=data_frameTime[[i]], r=2)
-#   }
-#   summary(resexact_Time[[i]])
-# }
-
-timeExact = list()
-effectSizeExact = list()
-for (i in 1:length(dependent_varsTime)) {
-  timeExact[[i]] = nominalSymmetryTest(subsetsTime[[i]], exact=TRUE)
-  effectSizeExact[[i]] = cohenG(subsetsTime[[i]])
-  print(effectSizeExact[[i]])
-  print(timeExact[[i]]$Pairwise.symmetry.tests)
-}
-
-for (i in 1:length(dependent_varsTime)) {
-  
-  print(subsetsTime[[i]])
-  print(wilcoxResults[[i]]$p.value)
-  
-}
-
-# wilcoxon tests 
-
-#wilcoxonPairedRC(x = Data$Likert,
-#                g = Data$Time)
-
 
 formula1 <- list(); model1 <- list(); p1nonadjust <- list()
 formula1_subsets <- list(); formula1_totals <- list();totals1 <- list(); subsets1<-list();data_frame1<- list();resexact_1<-list()
@@ -650,7 +494,6 @@ for (i in 1:length(independent_vars)) {
   
   
 }
-
 
 p1adjust <- p.adjust(p1nonadjust,"BH")
 p1total <- cbind(p1nonadjust,p1adjust)
@@ -928,298 +771,6 @@ for (i in 1:(length(independent_vars))) {
   print((round(exp(interest_var[[i]]$coeffs),3)))
   print((round(exp(interest_var[[i]]$coeffs.ci),3)))
   print((round(interest_var[[i]]$p.values,3)))
-  
-}
-
-#binomial test vs. mcnemar test 
-
-interest_var=resexact_Time
-for (i in 1:(length(dependent_varsTime))) {
-  print(independent_varsTime[[i]])
-  print((round(exp(interest_var[[i]]$coeffs),3)))
-  print((round(exp(interest_var[[i]]$coeffs.ci),3)))
-  print((round(interest_var[[i]]$p.values,3)))
-  
-}
-
-# 
-# 
-# formula9 <- list(); model9 <- list(); p9nonadjust <- list()
-# for (i in 1:length(independent_vars)) {
-#   formula9[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
-#   model9[[i]] = glm(formula9[[i]],data=data_file_stats,family="binomial") 
-#   anova_temp <- Anova(model9[[i]],type="II", test="Wald");
-#   p9nonadjust[[i]] <- round(anova_temp[[3]],3)
-#   
-#   
-#   print(summary(model9[[i]]))
-#   print(anova_temp)
-#   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-#   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-#   
-# }
-# p9adjust <- p.adjust(p9nonadjust,"BH")
-# p9total <- cbind(p9nonadjust,p9adjust)
-# 
-# formula10 <- list(); model10 <- list(); p10nonadjust <- list()
-# for (i in 1:length(independent_vars)) {
-#   formula10[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
-#   model10[[i]] = glm(formula10[[i]],data=data_file_stats,family="binomial") 
-#   anova_temp <- Anova(model10[[i]],type="II", test="Wald");
-#   p10nonadjust[[i]] <- round(anova_temp[[3]],3)
-#   
-#   
-#   print(summary(model10[[i]]))
-#   print(anova_temp)
-#   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-#   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-#   
-# }
-# p10adjust <- p.adjust(p10nonadjust,"BH")
-# p10total <- cbind(p10nonadjust,p10adjust)
-# 
-# formula11 <- list(); model11 <- list(); p11nonadjust <- list()
-# for (i in 1:length(independent_vars)) {
-#   formula11[[i]] = paste0("resect_condense", " ~ ", independent_vars[[i]])
-#   model11[[i]] = glm(formula11[[i]],data=data_file_stats,family="binomial") 
-#   anova_temp <- Anova(model11[[i]],type="II", test="Wald");
-#   p11nonadjust[[i]] <- round(anova_temp[[3]],3)
-#   
-#   
-#   print(summary(model11[[i]]))
-#   print(anova_temp)
-#   #print(wald.test(b=coef(model1[[i]])),Sigma = vcov(model1[[i]]),Terms= )
-#   #wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms = 4:6)
-#   
-# }
-# p11adjust <- p.adjust(p11nonadjust,"BH")
-# p11total <- cbind(p11nonadjust,p11adjust)
-
-
-if (doOrdinal){
-  
-  fit.ordinal_cn_3 = polr(imm_cn_3~surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats)
-  
-  fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach,data=data_file_stats)
-  fit.multinom_cn_3 = multinom(imm_cn_3~surg_approach,data=data_file_stats)
-  brant(fit.ordinal_cn_3)
-  
-  
-  #fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-  fit.ordinal_cn_3_imm = polr(imm_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
-  
-  #fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-  
-  fit.ordinal_cn_3 = polr(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats)
-  
-  
-  fit.ordinal_cn_4_imm = polr(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-  fit.ordinal_cn_4 = polr(po_1_cn_4~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-  
-  fit.ordinal_cn_5_imm = polr(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-  fit.ordinal_cn_5 = polr(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-  
-  fit.ordinal_cn_6_imm = polr(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-  fit.ordinal_cn_6 = polr(po_1_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats)
-} else{
-  # fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense+epi_condense+path_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  
-  #fit.ordinal_cn_3 = glm(po_1_cn_3~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense,data=data_file_stats)
-  
-  #  fit.log_cn_3 = glm(po_1_cn_3~surg_approach_condense+epi_condense+path_condense + +age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  fit.log_cn_3_imm = glm(imm_cn_3~surg_approach_condense + age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  
-  
-  fit.log_cn_4_imm = glm(imm_cn_4~surg_approach_condense+age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  fit.log_cn_4 = glm(po_1_cn_4~ age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  
-  fit.log_cn_5_imm = glm(imm_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
-  fit.log_cn_5 = glm(po_1_cn_5~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
-  
-  fit.log_cn_6_imm = glm(imm_cn_6~surg_approach_condense+age+prev_rad+prev_surg+path_condense+epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
-  fit.log_cn_6 = glm(po_1_cn_6~age+prev_rad+prev_surg+lat+sup+post,data=data_file_stats,family="binomial")
-  
-  
-}
-
-
-
-if (doMixed){
-  data_file_stats_long3<-data_file_stats%>%pivot_longer(cols = c("imm_cn_3","po_6_3_months_cn_3","po_1_cn_3"),names_to="names_time_cn3",values_to="cn_3")
-  data_file_stats_long4<-data_file_stats%>%pivot_longer(cols = c("imm_cn_4","po_6_3_months_cn_4","po_1_cn_4"),names_to="names_time_cn4",values_to="cn_4")
-  data_file_stats_long5<-data_file_stats%>%pivot_longer(cols = c("imm_cn_5","po_6_3_months_cn_5","po_1_cn_5"),names_to="names_time_cn5",values_to="cn_5")
-  data_file_stats_long6<-data_file_stats%>%pivot_longer(cols = c("imm_cn_6","po_6_3_months_cn_6","po_1_cn_6"),names_to="names_time_cn6",values_to="cn_6")
-  
-  data_file_stats_long3 <- data_file_stats_long3 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn3, ignore.case = TRUE)~'time1',
-                                                                                             grepl("po_6_3_months", names_time_cn3, ignore.case = TRUE)~'time2',
-                                                                                             grepl("po_1", names_time_cn3, ignore.case = TRUE)~'time3'
-  )))
-  
-  data_file_stats_long4 <- data_file_stats_long4 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn4, ignore.case = TRUE)~'time1',
-                                                                                             grepl("po_6_3_months", names_time_cn4, ignore.case = TRUE)~'time2',
-                                                                                             grepl("po_1", names_time_cn4, ignore.case = TRUE)~'time3'
-  )))
-  
-  data_file_stats_long5 <- data_file_stats_long5 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn5, ignore.case = TRUE)~'time1',
-                                                                                             grepl("po_6_3_months", names_time_cn5, ignore.case = TRUE)~'time2',
-                                                                                             grepl("po_1", names_time_cn5, ignore.case = TRUE)~'time3'
-  )))
-  
-  data_file_stats_long6 <- data_file_stats_long6 %>% mutate(time_point = as.factor(case_when(grepl("imm", names_time_cn6, ignore.case = TRUE)~'time1',
-                                                                                             grepl("po_6_3_months", names_time_cn6, ignore.case = TRUE)~'time2',
-                                                                                             grepl("po_1", names_time_cn6, ignore.case = TRUE)~'time3'
-  )))
-  
-  fit.cn_time_3_ord = clmm(cn_3 ~ time_point + (1|id), data=data_file_stats_long3)
-  fit.cn_time_4_ord = clmm(cn_4 ~ time_point + (1|id), data=data_file_stats_long4)
-  fit.cn_time_5_ord = clmm(cn_5 ~ time_point + (1|id), data=data_file_stats_long5)
-  fit.cn_time_6_ord = clmm(cn_6 ~ time_point + (1|id), data=data_file_stats_long6)
-  
-  emm_model_3_ord = emmeans(fit.cn_time_3_ord, "time_point")
-  pairs(emm_model_3_ord, reverse = TRUE)
-  
-  emm_model_4_ord = emmeans(fit.cn_time_4_ord, "time_point")
-  pairs(emm_model_4_ord, reverse = TRUE)
-  
-  emm_model_5_ord = emmeans(fit.cn_time_5_ord, "time_point")
-  pairs(emm_model_5_ord, reverse = TRUE)
-  
-  emm_model_6_ord = emmeans(fit.cn_time_6_ord, "time_point")
-  pairs(emm_model_6_ord, reverse = TRUE)
-  
-  # set contrast options for unordered and ordered variables 
-  #options(contrasts = rep ("contr.treatment", 2)) - this was previously selected 
-  
-  fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id), data=data_file_stats_long3,family=binomial)
-  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id), data=data_file_stats_long4,family=binomial)
-  fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id), data=data_file_stats_long5,family=binomial)
-  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id), data=data_file_stats_long6,family=binomial)
-  
-  fit.cn_time_3 = glmmTMB(cn_3 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
-  #  fit.cn_time_4 = glmmTMB(cn_4 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long4,family=binomial)
-  # fit.cn_time_5 = glmmTMB(cn_5 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
-  #  fit.cn_time_6 = glmmTMB(cn_6 ~ time_point + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long6,family=binomial)
-  
-  fit.cn_time_3 = glmer(cn_3 ~ time_point + (time_point|id), data=data_file_stats_long3,family=binomial)
-  emm_model_3 = emmeans(fit.cn_time_3, "time_point")
-  pairs(emm_model_3, reverse = TRUE)
-  
-  
-  simulationOutput <- simulateResiduals(fittedModel = fit.cn_time_3)
-  plot(simulationOutput, asFactor = T)
-  # plotResiduals(simulationOutput,data_file_stats_long3$time_point, quantreg = T)
-  
-  
-  
-  options(contrasts = c("contr.sum","contr.poly"))
-  contr.sum(3)
-  
-  p <- ggplot(data = subset(data_file_stats_long3,!is.na(cn_3)), aes(x = time_point, y = cn_3, group = id,col=lat))
-  p+geom_jitter(height=0.2,width=0.2)
-  
-  fit.cn_3_mixed = glmer(cn_3 ~ surg_approach_condense+prev_rad+prev_surg+lat+sup+post + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  fit.cn_3_mixed = glmer(cn_3 ~ time_point*lat + age+prev_rad+prev_surg+(1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  
-  fit.cn_3_mixedlat = glmmPQL(cn_3 ~ time_point*lat,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long3,family=binomial)
-  fit.cn_3_mixedlat = glmmTMB(cn_3 ~ time_point*lat + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long3,family=binomial)
-  pairs(emmeans(fit.cn_3_mixedlat, "time_point", by = "lat"))
-  #dispersiontest(fit.cn_3_mixedlat)
-  
-  
-  fit.cn_3_mixedlat = glmer(cn_3 ~ time_point*lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  
-  fit.cn_3_lat = glmer(cn_3 ~ time_point + lat  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  anova(fit.cn_3_lat,fit.cn_3_mixedlat)
-  Anova(fit.cn_3_mixedlat,type="III")
-  
-  fit.cn_3_mixedsup = glmer(cn_3 ~ time_point*sup  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  fit.cn_3_sup = glmer(cn_3 ~ time_point + sup  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  anova(fit.cn_3_sup,fit.cn_3_mixedsup)
-  Anova(fit.cn_3_mixedsup,type="III")
-  
-  
-  fit.cn_3_mixedpost = glmer(cn_3 ~ time_point*post  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  fit.cn_3_post = glmer(cn_3 ~ time_point + post  + (1|id), data=data_file_stats_long3,family=binomial,nAGQ=10)
-  anova(fit.cn_3_post,fit.cn_3_mixedpost)
-  Anova(fit.cn_3_mixedpost,type="III")
-  
-  
-  fit.cn_4_mixedlat = glmer(cn_4 ~ time_point*lat  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  fit.cn_4_lat = glmer(cn_4 ~ time_point + lat  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  anova(fit.cn_4_lat,fit.cn_4_mixedlat)
-  Anova(fit.cn_4_mixedlat,type="III")
-  
-  
-  fit.cn_4_mixedsup = glmer(cn_4 ~ time_point*sup  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  fit.cn_4_sup = glmer(cn_4 ~ time_point + sup  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  anova(fit.cn_4_lat,fit.cn_4_mixedsup)
-  Anova(fit.cn_4_mixedsup,type="III")
-  
-  
-  fit.cn_4_mixedpost = glmer(cn_4 ~ time_point*post  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  fit.cn_4_post = glmer(cn_4 ~ time_point + post  + (1|id), data=data_file_stats_long4,family=binomial,nAGQ=10)
-  anova(fit.cn_4_post,fit.cn_4_mixedpost)
-  Anova(fit.cn_4_mixedpost,type="III")
-  
-  p <- ggplot(data = subset(data_file_stats_long5,!is.na(cn_5)), aes(x = time_point, y = cn_5, group = id,col=lat))
-  p+geom_jitter(height=0.2,width=0.2)
-  
-  
-  fit.cn_5_mixedlat_PQL = glmmPQL(cn_5 ~ time_point*lat,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
-  fit.cn_5_mixedlat_PQL = glmmPQL(cn_5 ~ time_point*lat,random = list(id = ~1), data=data_file_stats_long5,family=binomial)
-  
-  
-  fit.cn_5_mixedlat_TMB = glmmTMB(cn_5 ~ time_point*lat  + (1|id), data=data_file_stats_long5,family=binomial)
-  fit.cn_5_mixedlat_TMB = glmmTMB(cn_5 ~ time_point*lat  + (1|id) + ar1(time_point + 0|id), data=data_file_stats_long5,family=binomial)
-  
-  fit.cn_5_mixedlat = glmer(cn_5 ~ time_point*lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  fit.cn_5_lat = glmer(cn_5 ~ time_point + lat  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  anova(fit.cn_5_lat,fit.cn_5_mixedlat)
-  Anova(fit.cn_5_mixedlat,type="III")
-  
-  fit.cn_5_mixedsup_PQL = glmmPQL(cn_5 ~ time_point*sup,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
-  fit.cn_5_mixedsup_TMB = glmmTMB(cn_5 ~ time_point*sup  + (1|id), data=data_file_stats_long5,family=binomial)
-  
-  fit.cn_5_mixedsup = glmer(cn_5 ~ time_point*sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  fit.cn_5_sup = glmer(cn_5 ~ time_point + sup  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  anova(fit.cn_5_sup,fit.cn_5_mixedsup)
-  Anova(fit.cn_5_mixedsup,type="III")
-  
-  fit.cn_5_mixedpost = glmmPQL(cn_5 ~ time_point*sup,random = list(id = ~1),correlation = corAR1(), data=data_file_stats_long5,family=binomial)
-  
-  
-  fit.cn_5_mixedpost = glmer(cn_5 ~ time_point*post  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  fit.cn_5_post = glmer(cn_5 ~ time_point + post  + (1|id), data=data_file_stats_long5,family=binomial,nAGQ=10)
-  
-  fit.cn_5_mixedpost = glmmTMB(cn_5 ~ time_point*post  + (1|id), data=data_file_stats_long5,family=binomial)
-  fit.cn_5_post = glmmTMB(cn_5 ~ time_point + post  + (1|id), data=data_file_stats_long5,family=binomial)
-  
-  
-  anova(fit.cn_5_post,fit.cn_5_mixedpost)
-  Anova(fit.cn_5_mixedpost,type="III")
-  
-  
-  fit.cn_6_mixedlat = glmer(cn_6 ~ time_point*lat  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  fit.cn_6_lat = glmer(cn_6 ~ time_point + lat  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  anova(fit.cn_6_lat,fit.cn_6_mixedlat)
-  Anova(fit.cn_6_mixedlat,type="III")
-  
-  
-  fit.cn_6_mixedsup = glmer(cn_6 ~ time_point*sup  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  fit.cn_6_sup = glmer(cn_6 ~ time_point + sup  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  anova(fit.cn_6_sup,fit.cn_6_mixedsup)
-  Anova(fit.cn_6_mixedsup,type="III")
-  
-  
-  fit.cn_6_mixedpost = glmer(cn_6 ~ time_point*post  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  fit.cn_6_post = glmer(cn_6 ~ time_point + lat  + (1|id), data=data_file_stats_long6,family=binomial,nAGQ=10)
-  anova(fit.cn_6_post,fit.cn_6_mixedpost)
-  Anova(fit.cn_6_mixedpost,type="III")
-  
-  
-  plot_model(fit.cn_3_mixedlat)
-  
   
 }
 
