@@ -43,7 +43,7 @@ library(exactRankTests)
 
 setwd("~/code/cavernous_sinus_code")
 rootDir = here()
-dataDir = '/Users/davidcaldwell/OneDrive - UCSF/Research/UW_research/cav_sinus_total/cav_sinus_2022'
+dataDir = '/Users/davidcaldwell/Library/CloudStorage/OneDrive-UCSF/Research/UW_research/cav_sinus_total/cav_sinus_2024'
 saveFig = FALSE
 include_na_table = FALSE
 doOrdinal = FALSE
@@ -61,7 +61,7 @@ sect_properties <- prop_section(
 
 ### read data
 #data_file <- read_excel(file.path(dataDir,"Cavernous sinus cases, data collection sheet.xlsx"))
-data_file <- read_excel(file.path(dataDir,"cav_file_for_analysis.xlsx"))
+data_file <- read_excel(file.path(dataDir,"CSTumorsLNS.xlsx"))
 
 
 column_names = colnames(data_file)
