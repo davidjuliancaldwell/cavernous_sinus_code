@@ -46,9 +46,6 @@ rootDir = here()
 dataDir = '/Users/davidcaldwell/Library/CloudStorage/OneDrive-UCSF/Research/UW_research/cav_sinus_total/cav_sinus_2024'
 saveFig = FALSE
 include_na_table = FALSE
-doOrdinal = FALSE
-doMixed = FALSE
-doMixedRank = TRUE
 removeNaNwholeSubject = FALSE 
 fontSize = 10
 
@@ -174,8 +171,9 @@ data_file_stats<-data_file %>% mutate(  across(everything()& where(is.character)
 data_file_stats<-data_file %>% mutate(  across(everything()& where(is.character), ~na_if(., "NA")))
 data_file_stats<-data_file %>% mutate(  across(everything()& where(is.numeric), ~na_if(., NA)))
 
-
-data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`,
+data_file_stats <- data_file_stats %>% rename(
+                                              id = `Case Number`,
+                                              age = `Age at the time of surgery`,
                                               path = `Pathology (Meningioma = 1, Chordoma = 2, Chondrosarcoma = 3, Schwannoma = 4, Adenoma = 5 hemangioma = 6 Metastasis/cancer = 7  Other = 8)`,
                                               t_size=`Tumor size (T, cm)`,
                                               ap_size =`Tumor size (AP, cm)`,
@@ -194,7 +192,7 @@ data_file_stats <- data_file_stats %>% rename(age = `Age at the time of surgery`
                                               post = `Posterior wall (Y=1, N=2)`,
                                               ant = `Anterior wall (Y=1, N=2)`,
                                               grade = `Tumor grade (WHO) (NA = NA,`,
-                                              post_treat = `Post-operative aditionnal treatment (None=1, Repeat surgery = 2, SRS =3 FSRT = 4 Proton therapy =5 Chemo/immunotherapy = 6 Other = 7, 3,4 = 8,  5,6 = 9 4, 6 = 10`,
+                                              post_treat = `Post-operative aditionnal treatment (None=1, Repeat surgery = 2, SRS =3 FSRT = 4 Proton therapy =5 Chemo/immunotherapy = 6 Other = 7, 3,4 = 8,  5,6 = 9 4, 6 = 10, 2,4=11`,
                                               prev_rad = `Previous radiation therapy ((Y=1, 2 = N)`,
                                               prev_surg = `Previous surgery (Y=1, 2 = N)`,
                                               po_1_cn_3 = `PO 1 year (or last follow up) CN 3 Function compare to baseline (1 = No change 2 = Improved 3 = deteriorate)`,
@@ -240,30 +238,10 @@ data_file_stats <- data_file_stats %>% mutate(prev_rad = as.factor(recode(prev_r
 )
 
 
-# here is where we either make the outcome binary or keep it in three categories for cranial nerve function over time 
-if (doOrdinal){
-  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0)),
-                                                post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
-                                                surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
-                                                epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
-                                                path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
-                                                po_1_cn_3 = as.factor(recode(as.numeric(po_1_cn_3),"1" = 2, "2"=3,"3"=1)),
-                                                po_6_3_months_cn_3 = as.factor(recode(as.numeric(po_6_3_months_cn_3),"1" = 2, "2"=3,"3"=1)),
-                                                imm_cn_3 = as.factor(recode(as.numeric(imm_cn_3),"1" = 2, "2"=3,"3"=1)),
-                                                po_6_3_months_cn_4 = as.factor(recode(as.numeric(po_6_3_months_cn_4),"1" = 2, "2"=3,"3"=1)),
-                                                po_1_cn_4 = as.factor(recode(as.numeric(po_1_cn_4),"1" = 2, "2"=3,"3"=1)),
-                                                imm_cn_4 = as.factor(recode(as.numeric(imm_cn_4),"1" = 2, "2"=3,"3"=1)),
-                                                po_6_3_months_cn_5 = as.factor(recode(as.numeric(po_6_3_months_cn_5),"1" = 2, "2"=3,"3"=1)),
-                                                po_1_cn_5 = as.factor(recode(as.numeric(po_1_cn_5),"1" = 2, "2"=3,"3"=1)),
-                                                imm_cn_5 = as.factor(recode(as.numeric(imm_cn_5),"1" = 2, "2"=3,"3"=1)),
-                                                po_6_3_months_cn_6 = as.factor(recode(as.numeric(po_6_3_months_cn_6),"1" = 2, "2"=3,"3"=1)),
-                                                po_1_cn_6 = as.factor(recode(as.numeric(po_1_cn_6),"1" = 2, "2"=3,"3"=1)),
-                                                imm_cn_6 = as.factor(recode(as.numeric(imm_cn_6),"1" = 2, "2"=3,"3"=1))
-  )
-  
-} else{
-  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0)),
-                                                post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1)),
+
+
+  data_file_stats <- data_file_stats %>% mutate(resect_condense = as.factor(recode(resect,"1" = 1,"2" = 0,"3"=0,"4"=0,"5"=0)),
+                                                post_treat_condense = as.factor(recode(post_treat,"1" = 0,"2" = 1,"3"=1,"4"=1,"5"=1,"6"=1,"7"=1,"8"=1,"9"=1,"10"=1,"11"=1)),
                                                 surg_approach_condense = as.factor(recode(surg_approach,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4")),
                                                 epi_condense = as.factor(recode(epi,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4")),
                                                 path_condense = as.factor(recode(path,"1"="1","2"="2","3"="3","4"="4","5"="4","6"="4","7"="4","8"="4")),
@@ -295,49 +273,47 @@ if (doOrdinal){
                                                 po_1_cn_4_raw = as.factor(recode(as.numeric(po_1_cn_4_raw),"1"=3,"2"=2,"3"=1)),
                                                 po_1_cn_5_raw = as.factor(recode(as.numeric(po_1_cn_5_raw),"1"=3,"2"=2,"3"=1)),
                                                 po_1_cn_6_raw = as.factor(recode(as.numeric(po_1_cn_6_raw),"1"=3,"2"=2,"3"=1))
-                                                
   )
   
-}
-dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","po_6_3_months_cn_3","imm_cn_4","po_1_cn_4","po_6_3_months_cn_4","imm_cn_5","po_1_cn_5","po_6_3_months_cn_5","imm_cn_6","po_1_cn_6","po_6_3_months_cn_6")
-#independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","age","lat","sup","post")
-independent_vars = c("surg_approach_condense","epi_condense","path_condense","prev_rad","prev_surg","lat","sup","post","age")
-
-dependent_varsTime = c("imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")
-independent_varsTime = c("preop_3","preop_4","preop_5","preop_6")
-
-
-# this was for trying exact logistic with comparison via change to immediate postop, didnt work 
-dependent_varsTimeChange = c("po_6_3_months_cn_3","po_1_cn_3","po_6_3_months_cn_4","po_1_cn_4","po_6_3_months_cn_5","po_1_cn_5","po_6_3_months_cn_6","po_1_cn_6")
-independent_varsTimeChange = c("imm_cn_3","imm_cn_4","imm_cn_5","imm_cn_6")
-
-dependent_vars = set_names(dependent_vars)
-independent_vars = set_names(independent_vars)
-
-dependent_varsTime = set_names(dependent_varsTime)
-independent_varsTime = set_names(independent_varsTime)
-
-dependent_varsTimeChange = set_names(dependent_varsTimeChange)
-independent_varsTimeChange = set_names(independent_varsTimeChange)
-
-# get subsets that have time values at all points to make sure its paired data 
-data_file_stats_subset_raw <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTime,independent_varsTime)))
-data_file_stats_subset_raw = data_file_stats_subset_raw[complete.cases(data_file_stats_subset_raw),]
-
-data_file_stats_subset <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTimeChange,independent_varsTimeChange)))
-data_file_stats_subset = data_file_stats_subset[complete.cases(data_file_stats_subset),]
-
-
-#identify all factor columns
-data_file_stats_subset_raw_numeric <-data_file_stats_subset_raw
-x <- sapply(data_file_stats_subset_raw, is.factor)
-
-data_file_stats_subset_raw_numeric[,x] = as.data.frame(apply(data_file_stats_subset_raw[ , x], 2, as.numeric))
-
-ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","resect_condense","post_treat_condense")])
-
-ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","po_1_cn_3","po_1_cn_4","po_1_cn_5","po_1_cn_6")])
-
+  dependent_vars = c("resect_condense","post_treat_condense","imm_cn_3","po_1_cn_3","po_6_3_months_cn_3","imm_cn_4","po_1_cn_4","po_6_3_months_cn_4","imm_cn_5","po_1_cn_5","po_6_3_months_cn_5","imm_cn_6","po_1_cn_6","po_6_3_months_cn_6")
+  #independent_vars = c("surg_approach","surg_approach_condense","epi","epi_condense","path","path_condense","prev_rad","prev_surg","age","lat","sup","post")
+  independent_vars = c("surg_approach_condense","epi_condense","path_condense","prev_rad","prev_surg","lat","sup","post","age")
+  
+  dependent_varsTime = c("imm_cn_3_raw","po_6_3_months_cn_3_raw","po_1_cn_3_raw","imm_cn_4_raw","po_6_3_months_cn_4_raw","po_1_cn_4_raw","imm_cn_5_raw","po_6_3_months_cn_5_raw","po_1_cn_5_raw","imm_cn_6_raw","po_6_3_months_cn_6_raw","po_1_cn_6_raw")
+  independent_varsTime = c("preop_3","preop_4","preop_5","preop_6")
+  
+  
+  # this was for trying exact logistic with comparison via change to immediate postop, didnt work 
+  dependent_varsTimeChange = c("po_6_3_months_cn_3","po_1_cn_3","po_6_3_months_cn_4","po_1_cn_4","po_6_3_months_cn_5","po_1_cn_5","po_6_3_months_cn_6","po_1_cn_6")
+  independent_varsTimeChange = c("imm_cn_3","imm_cn_4","imm_cn_5","imm_cn_6")
+  
+  dependent_vars = set_names(dependent_vars)
+  independent_vars = set_names(independent_vars)
+  
+  dependent_varsTime = set_names(dependent_varsTime)
+  independent_varsTime = set_names(independent_varsTime)
+  
+  dependent_varsTimeChange = set_names(dependent_varsTimeChange)
+  independent_varsTimeChange = set_names(independent_varsTimeChange)
+  
+  # get subsets that have time values at all points to make sure its paired data 
+  data_file_stats_subset_raw <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTime,independent_varsTime)))
+  data_file_stats_subset_raw = data_file_stats_subset_raw[complete.cases(data_file_stats_subset_raw),]
+  
+  data_file_stats_subset <- data_file_stats %>% dplyr::select(any_of(c(dependent_varsTimeChange,independent_varsTimeChange)))
+  data_file_stats_subset = data_file_stats_subset[complete.cases(data_file_stats_subset),]
+  
+  
+  #identify all factor columns
+  data_file_stats_subset_raw_numeric <-data_file_stats_subset_raw
+  x <- sapply(data_file_stats_subset_raw, is.factor)
+  
+  data_file_stats_subset_raw_numeric[,x] = as.data.frame(apply(data_file_stats_subset_raw[ , x], 2, as.numeric))
+  
+  ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","resect_condense","post_treat_condense")])
+  
+  ggpairs(data_file_stats[,c("surg_approach_condense","epi_condense","path_condense","age","lat","sup","post","po_1_cn_3","po_1_cn_4","po_1_cn_5","po_1_cn_6")])
+  
 
 #https://aosmith.rbind.io/2018/08/20/automating-exploratory-plots/
 
@@ -362,8 +338,6 @@ if (saveFig){
 plot3 <- ggplot(data_file_stats,aes(x=age,y=po_1_cn_6,color=path)) + geom_jitter(height=0.2,width=0.2)
 plot3
 
-if (doMixedRank){
-  
   if (removeNaNwholeSubject){
   # remove incomplete cases prior to ranking
   
@@ -436,6 +410,7 @@ if (doMixedRank){
   cn_6_rank_model <- lme4::lmer(rankedcn6 ~ time_point + (1|id),data=data_file_stats_long6Rank)
   
   emm_model_3 = emmeans(cn_3_rank_model, "time_point")
+  contrast(emm_model_3, "trt.vs.ctrl", ref = "time1")
   pairs(emm_model_3, reverse = TRUE)
   Anova(cn_3_rank_model,type="II")
   plot_model(cn_3_rank_model)
@@ -443,6 +418,7 @@ if (doMixedRank){
   plot(simulationOutput3, asFactor = T)
   
   emm_model_4 = emmeans(cn_4_rank_model, "time_point")
+  contrast(emm_model_4, "trt.vs.ctrl", ref = "time1")
   pairs(emm_model_4, reverse = TRUE)
   Anova(cn_4_rank_model,type="II")
   plot_model(cn_4_rank_model)
@@ -450,6 +426,7 @@ if (doMixedRank){
   plot(simulationOutput4, asFactor = T)
   
   emm_model_5 = emmeans(cn_5_rank_model, "time_point")
+  contrast(emm_model_5, "trt.vs.ctrl", ref = "time1")
   pairs(emm_model_5, reverse = TRUE)
   Anova(cn_5_rank_model,type="II")
   plot_model(cn_5_rank_model)
@@ -457,13 +434,12 @@ if (doMixedRank){
   plot(simulationOutput5, asFactor = T)
   
   emm_model_6 = emmeans(cn_6_rank_model, "time_point")
+  contrast(emm_model_6, "trt.vs.ctrl", ref = "time1")
   pairs(emm_model_6, reverse = TRUE)
   Anova(cn_6_rank_model,type="II")
   plot_model(cn_6_rank_model)
   simulationOutput6 <- simulateResiduals(fittedModel = cn_6_rank_model)
   plot(simulationOutput6, asFactor = T)
-  
-}
 
 formula1 <- list(); model1 <- list(); p1nonadjust <- list()
 formula1_subsets <- list(); formula1_totals <- list();totals1 <- list(); subsets1<-list();data_frame1<- list();resexact_1<-list()
@@ -494,33 +470,6 @@ for (i in 1:length(independent_vars)) {
   
   
 }
-
-p1adjust <- p.adjust(p1nonadjust,"BH")
-p1total <- cbind(p1nonadjust,p1adjust)
-
-
-fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
-fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
-
-fit.logit1 = glm(resect_condense ~ surg_approach + prev_rad + prev_surg + age + path,data=data_file_stats,family="binomial")
-
-fit.logit1 = glm(resect_condense ~ surg_approach_condense + prev_rad + prev_surg + age + path_condense + epi_condense+lat+post+sup,data=data_file_stats,family="binomial")
-
-fit.logit1 = glm(resect_condense ~ prev_rad + prev_surg + age + path_condense + epi_condense+lat+post+sup,data=data_file_stats,family="binomial")
-
-#http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
-# Extract model results
-fit.logit1.data <- augment(fit.logit1) %>% 
-  mutate(index = 1:n()) 
-
-ggplot(fit.logit1.data, aes(index, .std.resid)) + 
-  geom_point(aes(color = resect_condense), alpha = .5) +
-  theme_bw()
-
-fit.logit1.data %>% 
-  filter(abs(.std.resid) > 3)
-
-car::vif(fit.logit1)
 
 formula2 <- list(); model2 <- list(); p2nonadjust <- list()
 formula2_subsets <- list(); formula2_totals <- list();totals2 <- list(); subsets2<-list();data_frame2<- list();resexact_2<-list()
@@ -553,40 +502,6 @@ for (i in 1:length(independent_vars)) {
   summary(resexact_2[[i]])
   
 }
-p2adjust <- p.adjust(p2nonadjust,"BH")
-p2total <- cbind(p2nonadjust,p2adjust)
-
-fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + lat + med + sup + post + ant + path,data=data_file_stats,family="binomial")
-fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg + epi + age + path,data=data_file_stats,family="binomial")
-fit.logit2 = glm(post_treat_condense ~ surg_approach + prev_rad + prev_surg  + age + path,data=data_file_stats,family="binomial")
-
-fit.logit2 = glm(post_treat_condense ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
-
-#http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/
-# Extract model results
-fit.logit2.data <- augment(fit.logit2) %>% 
-  mutate(index = 1:n()) 
-
-ggplot(fit.logit2.data, aes(index, .std.resid)) + 
-  geom_point(aes(color = post_treat_condense), alpha = .5) +
-  theme_bw()
-
-fit.logit2.data %>% 
-  filter(abs(.std.resid) > 3)
-
-car::vif(fit.logit2)
-
-
-#fit.logit = glm(resect_condense ~ surg_approach ,data=data_file_stats,family="binomial")
-confint(fit.logit1)
-wald.test(b = coef(fit.logit1), Sigma = vcov(fit.logit1), Terms = 2:6)
-exp(coef(fit.logit1))
-
-confint(fit.logit2)
-wald.test(b = coef(fit.logit2), Sigma = vcov(fit.logit2), Terms = 2:6)
-exp(coef(fit.logit2))
-
-fit.logit3 = glm(major_comp ~ surg_approach_condense + prev_rad + prev_surg  + age + path_condense + epi_condense+lat+sup+post,data=data_file_stats,family="binomial")
 
 formula4 <- list(); model4 <- list(); p4nonadjust <- list()
 formula4_subsets <- list(); formula4_totals <- list();totals4 <- list(); subsets4<-list();data_frame4<- list();resexact_4<-list()
@@ -764,14 +679,13 @@ p8adjust <- p.adjust(p8nonadjust,"BH")
 p8total <- cbind(p8nonadjust,p8adjust)
 
 
-interest_var = resexact_5
-formula8
+interest_var = resexact_1
 for (i in 1:(length(independent_vars))) {
   print(independent_vars[[i]])
   print((round(exp(interest_var[[i]]$coeffs),3)))
   print((round(exp(interest_var[[i]]$coeffs.ci),3)))
   print((round(interest_var[[i]]$p.values,3)))
-  
+
 }
 
 if (saveFig){
